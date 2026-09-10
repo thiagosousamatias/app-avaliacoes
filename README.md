@@ -15,7 +15,7 @@ Next.js (App Router, TypeScript) + Tailwind CSS + Supabase (Postgres, Auth, RLS)
    ```
 
 2. Crie um projeto no [Supabase](https://supabase.com) e aplique as migrations em
-   `supabase/migrations/` (na ordem `0001`, `0002`, `0003`) pelo SQL Editor do painel, ou via
+   `supabase/migrations/` (em ordem numérica) pelo SQL Editor do painel, ou via
    Supabase CLI (`supabase db push`).
 
 3. Copie `.env.local.example` para `.env.local` e preencha com as credenciais do projeto
@@ -32,13 +32,14 @@ Next.js (App Router, TypeScript) + Tailwind CSS + Supabase (Postgres, Auth, RLS)
    npm run dev
    ```
    - Formulário público: `/pesquisa/jogos-esportivos`
-   - Login de gestor (magic link): `/login`
+   - Login de gestor (e-mail + senha): `/login`
    - Dashboard: `/dashboard`
 
 ## Configurar autenticação (Supabase Auth)
 
-No painel do Supabase, em **Authentication → URL Configuration**, adicione
-`http://localhost:3000/auth/callback` (e depois a URL de produção) como Redirect URL.
+Login é e-mail + senha simples (sem confirmação por e-mail). Para cada gestor, crie o usuário
+direto no painel do Supabase: **Authentication → Users → Add user**, preenchendo e-mail e
+senha manualmente e marcando "Auto Confirm User".
 
 ## Estrutura
 
