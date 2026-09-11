@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { PesquisaCompleta, RespostaFormulario } from "@/lib/types/survey";
-import { enviarRespostas, jaEnviouNesteAparelho } from "@/lib/survey/submit";
+import { enviarRespostas } from "@/lib/survey/submit";
 import { LikertButton } from "./LikertButton";
 import { BooleanToggle } from "./BooleanToggle";
 import { NumericInput } from "./NumericInput";
@@ -27,14 +27,7 @@ export function SurveyForm({ dados }: SurveyFormProps) {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
-  // useSyncExternalStore (nao useEffect+setState) para ler o localStorage: o snapshot do
-  // servidor e sempre `false` (servidor nao tem localStorage) e o do cliente le o valor real
-  // logo apos a hidratacao, sem o mismatch de ler localStorage direto no render/useState.
-  const jaRespondeuAntes = useSyncExternalStore(
-    () => () => {},
-    () => jaEnviouNesteAparelho(pesquisa.slug),
-    () => false,
-  );
+  const refsPerguntas = useRef(new Map<string, HTMLDivElement | null>());
 
   const respondidas = questoesObrigatorias.filter((q) => respostas[q.id] !== undefined).length;
   const completo = respondidas === questoesObrigatorias.length;
@@ -44,11 +37,21 @@ export function SurveyForm({ dados }: SurveyFormProps) {
   }
 
   async function handleSubmit() {
-    if (!completo || enviando) return;
+    if (enviando) return;
     setErro(null);
+
+    if (!completo) {
+      const faltando = questoesObrigatorias.find((q) => respostas[q.id] === undefined);
+      if (faltando) {
+        setErro(`Falta responder: "${faltando.enunciado}"`);
+        refsPerguntas.current.get(faltando.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
     setEnviando(true);
     try {
-      await enviarRespostas(pesquisa.slug, pesquisa.id, respostas);
+      await enviarRespostas(pesquisa.id, respostas);
       setEnviado(true);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível enviar. Tente novamente.");
@@ -62,8 +65,8 @@ export function SurveyForm({ dados }: SurveyFormProps) {
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <Image src="/sesi-saude-logo.png" alt="SESI+ Saúde" width={1067} height={584} className="h-10 w-auto" />
         <div className="text-5xl">✅</div>
-        <h1 className="text-xl font-bold text-slate-800">Obrigado pela participação!</h1>
-        <p className="text-slate-600">Suas respostas foram registradas com sucesso.</p>
+        <h1 className="text-2xl font-bold text-slate-800">Obrigado pela participação!</h1>
+        <p className="text-lg text-slate-600">Suas respostas foram registradas com sucesso.</p>
       </div>
     );
   }
@@ -79,29 +82,23 @@ export function SurveyForm({ dados }: SurveyFormProps) {
           className="mb-4 h-10 w-auto"
           priority
         />
-        <h1 className="text-xl font-bold text-slate-800">{pesquisa.titulo}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{pesquisa.titulo}</h1>
         {pesquisa.descricao && (
-          <p className="mt-1 text-sm text-slate-500">{pesquisa.descricao}</p>
+          <p className="mt-1 text-base text-slate-500">{pesquisa.descricao}</p>
         )}
       </header>
 
-      {jaRespondeuAntes && (
-        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Este aparelho já enviou uma resposta para esta pesquisa. Você ainda pode enviar de
-          novo se quiser.
-        </div>
-      )}
-
       <div className="space-y-8">
         {perguntasPerfil.map((q) => (
-          <QuestaoField
-            key={q.id}
-            enunciado={q.enunciado}
-            tipo={q.tipo_resposta}
-            valor={respostas[q.id]}
-            opcoes={q.opcoes}
-            onChange={(v) => setResposta(q.id, v)}
-          />
+          <div key={q.id} ref={(el) => { refsPerguntas.current.set(q.id, el); }}>
+            <QuestaoField
+              enunciado={q.enunciado}
+              tipo={q.tipo_resposta}
+              valor={respostas[q.id]}
+              opcoes={q.opcoes}
+              onChange={(v) => setResposta(q.id, v)}
+            />
+          </div>
         ))}
 
         {dimensoes.map((d) => (
@@ -110,32 +107,34 @@ export function SurveyForm({ dados }: SurveyFormProps) {
               {d.nome}
             </h2>
             {d.questoes.map((q) => (
-              <QuestaoField
-                key={q.id}
-                enunciado={q.enunciado}
-                tipo={q.tipo_resposta}
-                valor={respostas[q.id]}
-                opcoes={q.opcoes}
-                onChange={(v) => setResposta(q.id, v)}
-              />
+              <div key={q.id} ref={(el) => { refsPerguntas.current.set(q.id, el); }}>
+                <QuestaoField
+                  enunciado={q.enunciado}
+                  tipo={q.tipo_resposta}
+                  valor={respostas[q.id]}
+                  opcoes={q.opcoes}
+                  onChange={(v) => setResposta(q.id, v)}
+                />
+              </div>
             ))}
           </section>
         ))}
 
         {perguntasFechamento.map((q) => (
-          <QuestaoField
-            key={q.id}
-            enunciado={q.enunciado}
-            tipo={q.tipo_resposta}
-            valor={respostas[q.id]}
-            opcoes={q.opcoes}
-            onChange={(v) => setResposta(q.id, v)}
-          />
+          <div key={q.id} ref={(el) => { refsPerguntas.current.set(q.id, el); }}>
+            <QuestaoField
+              enunciado={q.enunciado}
+              tipo={q.tipo_resposta}
+              valor={respostas[q.id]}
+              opcoes={q.opcoes}
+              onChange={(v) => setResposta(q.id, v)}
+            />
+          </div>
         ))}
       </div>
 
       {erro && (
-        <div className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-base text-red-700">
           {erro}
         </div>
       )}
@@ -144,9 +143,9 @@ export function SurveyForm({ dados }: SurveyFormProps) {
         <div className="mx-auto max-w-md">
           <button
             type="button"
-            disabled={!completo || enviando}
+            disabled={enviando}
             onClick={handleSubmit}
-            className="min-h-14 w-full rounded-xl bg-slate-800 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="min-h-14 w-full rounded-xl bg-slate-800 text-lg font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {enviando ? "Enviando…" : `Enviar respostas (${respondidas}/${questoesObrigatorias.length})`}
           </button>
@@ -174,7 +173,7 @@ function QuestaoField({
 
   return (
     <div>
-      <p className="mb-3 text-base font-medium text-slate-800">{enunciado}</p>
+      <p className="mb-3 text-lg font-medium text-slate-800">{enunciado}</p>
       {tipo === "likert" && (
         <LikertButton valor={valor as number | undefined} onChange={onChange} opcoes={opcoesLista} />
       )}

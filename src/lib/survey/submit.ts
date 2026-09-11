@@ -3,26 +3,6 @@ import type { RespostaFormulario } from "@/lib/types/survey";
 
 const CHAVE_DISPOSITIVO = "device_id";
 
-export function chaveEnviado(slug: string) {
-  return `submitted:${slug}`;
-}
-
-export function jaEnviouNesteAparelho(slug: string): boolean {
-  try {
-    return window.localStorage.getItem(chaveEnviado(slug)) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function marcarEnviado(slug: string) {
-  try {
-    window.localStorage.setItem(chaveEnviado(slug), "1");
-  } catch {
-    // localStorage indisponivel (modo privado etc.) - segue sem o aviso de reenvio.
-  }
-}
-
 // UUID aleatorio, gerado uma vez e reaproveitado neste navegador - sem ligacao com
 // identidade, so serve pra distinguir "mesmo aparelho" de "aparelho diferente". Se
 // localStorage estiver indisponivel, retorna undefined e o insert segue sem essa protecao
@@ -39,11 +19,7 @@ function obterDispositivoId(): string | undefined {
   }
 }
 
-export async function enviarRespostas(
-  slug: string,
-  pesquisaId: string,
-  respostas: RespostaFormulario,
-) {
+export async function enviarRespostas(pesquisaId: string, respostas: RespostaFormulario) {
   const supabase = createClient();
 
   // O id e gerado aqui, nao pelo banco: RETURNING exige privilegio de SELECT no Postgres, e o
@@ -57,11 +33,10 @@ export async function enviarRespostas(
     .insert({ id: sessaoId, pesquisa_id: pesquisaId, dispositivo_id: dispositivoId ?? null });
 
   if (sessaoError) {
-    // 23505 = unique_violation: esse aparelho ja respondeu essa pesquisa (bloqueado no banco,
-    // nao so avisado no client).
+    // 23505 = unique_violation: esse aparelho ja respondeu essa pesquisa - bloqueado de
+    // verdade no banco, essa e a unica mensagem de duplicidade que o usuario ve.
     if (sessaoError.code === "23505") {
-      marcarEnviado(slug);
-      throw new Error("Este aparelho já enviou uma resposta para esta pesquisa.");
+      throw new Error("Você já respondeu esta pesquisa neste aparelho. Não é possível enviar novamente.");
     }
     throw new Error(sessaoError.message);
   }
@@ -82,6 +57,4 @@ export async function enviarRespostas(
   if (itensError) {
     throw new Error(itensError.message);
   }
-
-  marcarEnviado(slug);
 }

@@ -50,7 +50,7 @@ export function LikertButton({ valor, onChange, opcoes }: LikertButtonProps) {
               aria-pressed={ativo}
               aria-label={labelDe(n, i)}
               onClick={() => onChange(n)}
-              className={`flex min-h-14 flex-col items-center justify-center rounded-xl border-2 text-lg font-semibold transition-colors active:scale-95 ${
+              className={`flex min-h-14 flex-col items-center justify-center rounded-xl border-2 text-xl font-semibold transition-colors active:scale-95 ${
                 ativo ? CORES_ATIVO[i] : `bg-white ${CORES_INATIVO[i]}`
               }`}
             >
@@ -59,12 +59,12 @@ export function LikertButton({ valor, onChange, opcoes }: LikertButtonProps) {
           );
         })}
       </div>
-      <div className="mt-1.5 flex justify-between text-xs text-slate-500">
+      <div className="mt-1.5 flex justify-between text-sm text-slate-500">
         <span className="max-w-[45%]">{labelDe(1, 0)}</span>
         <span className="max-w-[45%] text-right">{labelDe(5, 4)}</span>
       </div>
       {labelSelecionado && (
-        <p className="mt-1 text-center text-sm font-medium text-slate-700">{labelSelecionado}</p>
+        <p className="mt-1 text-center text-base font-medium text-slate-700">{labelSelecionado}</p>
       )}
     </div>
   );
