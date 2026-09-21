@@ -23,6 +23,9 @@ export async function createClient() {
           }
         },
       },
+      // Mesmo motivo do client.ts: o cookie de sessao do /dashboard nao pode vazar pro
+      // formulario publico em /pesquisa (que usa este mesmo createClient no server component).
+      cookieOptions: { path: "/dashboard" },
     },
   );
 }

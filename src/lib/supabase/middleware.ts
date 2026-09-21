@@ -20,6 +20,10 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+      // O cookie de sessao do login automatico do /dashboard nao pode valer pro site inteiro -
+      // senao o formulario publico em /pesquisa passa a enviar como a role authenticated (sem
+      // permissao de INSERT) sempre que o mesmo navegador ja tiver visitado o /dashboard antes.
+      cookieOptions: { path: "/dashboard" },
     },
   );
 
