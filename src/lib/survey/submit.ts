@@ -1,24 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { RespostaFormulario } from "@/lib/types/survey";
 
-const CHAVE_DISPOSITIVO = "device_id";
-
-// UUID aleatorio, gerado uma vez e reaproveitado neste navegador - sem ligacao com
-// identidade, so serve pra distinguir "mesmo aparelho" de "aparelho diferente". Se
-// localStorage estiver indisponivel, retorna undefined e o insert segue sem essa protecao
-// (nao trava o envio por causa disso).
-function obterDispositivoId(): string | undefined {
-  try {
-    const existente = window.localStorage.getItem(CHAVE_DISPOSITIVO);
-    if (existente) return existente;
-    const novo = crypto.randomUUID();
-    window.localStorage.setItem(CHAVE_DISPOSITIVO, novo);
-    return novo;
-  } catch {
-    return undefined;
-  }
-}
-
 export async function enviarRespostas(pesquisaId: string, respostas: RespostaFormulario) {
   const supabase = createClient();
 
@@ -26,18 +8,12 @@ export async function enviarRespostas(pesquisaId: string, respostas: RespostaFor
   // anon nao tem (nem deve ter) SELECT nas tabelas de resposta. Gerando o UUID no client, o
   // insert nao precisa pedir nada de volta.
   const sessaoId = crypto.randomUUID();
-  const dispositivoId = obterDispositivoId();
 
   const { error: sessaoError } = await supabase
     .from("sessoes_resposta")
-    .insert({ id: sessaoId, pesquisa_id: pesquisaId, dispositivo_id: dispositivoId ?? null });
+    .insert({ id: sessaoId, pesquisa_id: pesquisaId });
 
   if (sessaoError) {
-    // 23505 = unique_violation: esse aparelho ja respondeu essa pesquisa - bloqueado de
-    // verdade no banco, essa e a unica mensagem de duplicidade que o usuario ve.
-    if (sessaoError.code === "23505") {
-      throw new Error("Você já respondeu esta pesquisa neste aparelho. Não é possível enviar novamente.");
-    }
     throw new Error(sessaoError.message);
   }
 
