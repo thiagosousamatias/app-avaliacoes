@@ -1,8 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useNuvemPalavras } from "@/lib/dashboard/useNuvemPalavras";
 import type { Pesquisa } from "@/lib/types/survey";
+
+// Tempo que a palavra fica com a classe de halo aplicada. So precisa ser >= duracao do
+// keyframe "halo" (2.5s) - a folga garante que a animacao termine de tocar antes de a classe
+// sair (a saida em si e imperceptivel, ja que o keyframe volta ao estado neutro em 100%).
+const HALO_DURACAO_MS = 3_000;
 
 // Baseado em vw (largura da tela), com piso/teto em px - assim nenhuma palavra fica mais
 // larga que a tela, seja num totem estreito em pe ou numa TV larga. clamp(piso, vw, teto).
@@ -38,12 +44,53 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
   const { palavras, error } = useNuvemPalavras(pesquisa.id, 8_000);
   const maxN = palavras?.[0]?.n ?? 1;
 
+  // Marca palavras cuja contagem acabou de subir (nova palavra ou mencionada de novo) pra
+  // receberem o halo. Compara cada leitura com a anterior guardada num ref - so entra em
+  // destaque quem cresceu de fato, nunca a lista toda na primeira carga.
+  const [destaque, setDestaque] = useState<Set<string>>(new Set());
+  const contagemAnteriorRef = useRef<Map<string, number> | null>(null);
+
+  useEffect(() => {
+    if (!palavras) return;
+
+    const anterior = contagemAnteriorRef.current;
+    contagemAnteriorRef.current = new Map(palavras.map((p) => [p.palavra, p.n]));
+
+    // Primeira carga: nada "cresceu", so existe - nao faz sentido destacar a nuvem inteira.
+    if (anterior === null) return;
+
+    const crescidas = palavras.filter((p) => p.n > (anterior.get(p.palavra) ?? 0));
+    if (crescidas.length === 0) return;
+
+    setDestaque((atual) => {
+      const novo = new Set(atual);
+      crescidas.forEach((p) => novo.add(p.palavra));
+      return novo;
+    });
+
+    crescidas.forEach((p) => {
+      setTimeout(() => {
+        setDestaque((atual) => {
+          if (!atual.has(p.palavra)) return atual;
+          const novo = new Set(atual);
+          novo.delete(p.palavra);
+          return novo;
+        });
+      }, HALO_DURACAO_MS);
+    });
+  }, [palavras]);
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-slate-950 px-4 py-6 text-center sm:px-8 sm:py-8">
       <style>{`
         @keyframes flutuar {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-0.4em); }
+        }
+        @keyframes halo {
+          0% { filter: drop-shadow(0 0 0px currentColor); transform: scale(1); }
+          20% { filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 28px currentColor); transform: scale(1.25); }
+          100% { filter: drop-shadow(0 0 0px currentColor); transform: scale(1); }
         }
         @keyframes fundoVivo {
           0% { background-position: 0% 50%; }
@@ -54,10 +101,6 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           background: linear-gradient(120deg, #020617, #0f172a, #022c22, #0f172a, #020617);
           background-size: 300% 300%;
           animation: fundoVivo 18s ease-in-out infinite;
-        }
-        .palavra-flutuante {
-          display: inline-block;
-          animation: flutuar 5s ease-in-out infinite;
         }
       `}</style>
       <div className="fundo-animado absolute inset-0 -z-10" />
@@ -95,15 +138,21 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
             {palavras.map((p) => {
               const proporcao = maxN > 1 ? (p.n - 1) / (maxN - 1) : 1;
               const h = hash(p.palavra);
+              const flutuar = `flutuar ${4 + (h % 30) / 10}s ease-in-out ${(h % 40) / 10}s infinite`;
+              // O halo entra como uma 2a animacao na mesma propriedade "animation" - por
+              // afetarem "transform" as duas juntas, o halo (mais recente na lista) assume o
+              // transform enquanto toca, entao a flutuacao pausa por ~2.5s e retoma sozinha
+              // quando o keyframe termina. Efeito aceitavel: um "pulso" em vez de flutuar+crescer.
+              const animacao = destaque.has(p.palavra) ? `${flutuar}, halo 2.5s ease-out` : flutuar;
               return (
                 <span
                   key={p.palavra}
-                  className="palavra-flutuante font-bold leading-none transition-[font-size,color] duration-700"
+                  className="font-bold leading-none transition-[font-size,color] duration-700"
                   style={{
                     fontSize: tamanhoFonte(proporcao),
                     color: corDe(proporcao),
-                    animationDelay: `${(h % 40) / 10}s`,
-                    animationDuration: `${4 + (h % 30) / 10}s`,
+                    display: "inline-block",
+                    animation: animacao,
                   }}
                 >
                   {p.palavra}
