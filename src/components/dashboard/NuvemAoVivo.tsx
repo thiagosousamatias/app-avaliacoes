@@ -56,12 +56,29 @@ function PalavraSpan({
   fontSize,
   cor,
   emDestaque,
+  estatico = false,
 }: {
   palavra: string;
   fontSize: string;
   cor: string;
   emDestaque: boolean;
+  estatico?: boolean;
 }) {
+  // O ranking e estatico de proposito - e uma lista fixa, ler nomes bailando junto ali
+  // atrapalha exatamente o efeito de "olhar e saber o que importa" que ele existe pra dar.
+  // So a zona de chegada flutua/brilha; o resize suave de fonte (ao subir/descer de posicao
+  // ali dentro) continua vindo da transition no className, nao de keyframes.
+  if (estatico) {
+    return (
+      <span
+        className="font-bold leading-none transition-[font-size,color] duration-700"
+        style={{ fontSize, color: cor, display: "inline-block" }}
+      >
+        {palavra}
+      </span>
+    );
+  }
+
   const h = hash(palavra);
   const flutuar = `flutuar ${4 + (h % 30) / 10}s ease-in-out ${(h % 40) / 10}s infinite`;
   // O halo entra como uma 2a animacao na mesma propriedade "animation" - por afetarem
@@ -248,7 +265,7 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
 
           <div className="zona-ranking">
             <p className="mb-1 shrink-0 text-xs font-semibold tracking-[0.2em] text-emerald-500/70 uppercase">
-              Mais citadas
+              Nosso Ranking de Valores
             </p>
             {ranking.map((p) => {
               const proporcao = maxN > 1 ? (p.n - 1) / (maxN - 1) : 1;
@@ -258,7 +275,8 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
                   palavra={p.palavra}
                   fontSize={tamanhoFonteRanking(proporcao)}
                   cor={corDe(proporcao)}
-                  emDestaque={destaque.has(p.palavra)}
+                  emDestaque={false}
+                  estatico
                 />
               );
             })}
