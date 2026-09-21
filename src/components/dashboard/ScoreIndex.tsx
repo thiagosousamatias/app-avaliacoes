@@ -23,11 +23,26 @@ function ScoreTile({ label, valor1a5 }: { label: string; valor1a5: number | null
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p className="min-h-8 text-xs leading-4 text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-800">{pontos ?? "—"}</p>
+      <p className="min-h-9 text-sm font-medium leading-tight text-slate-600">{label}</p>
+      <p className="mt-1 text-3xl font-bold tabular-nums text-slate-800">{pontos ?? "—"}</p>
       <div className="mt-2">
         <BarraPontuacao pontos={pontos} />
       </div>
+    </div>
+  );
+}
+
+function LegendaGradiente() {
+  return (
+    <div className="mx-auto mt-3 flex max-w-xs items-center gap-2 text-xs font-medium text-slate-400">
+      <span>Baixo</span>
+      <div
+        className="h-1.5 flex-1 rounded-full"
+        style={{
+          background: "linear-gradient(to right, #f97316, #f59e0b, #eab308, #84cc16, #22c55e)",
+        }}
+      />
+      <span>Alto</span>
     </div>
   );
 }
@@ -38,32 +53,19 @@ export function ScoreIndex({ radar, impactoGeral }: ScoreIndexProps) {
   return (
     <div>
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm print:border-slate-300">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Impacto Geral
-        </p>
-        <p className="mt-1 text-6xl font-bold tabular-nums text-slate-800">
+        <p className="text-base font-semibold text-slate-500">Impacto Geral</p>
+        <p className="mt-1 text-7xl font-bold tabular-nums text-slate-800">
           {pontosGeral ?? "—"}
         </p>
-        <div className="mx-auto mt-3 max-w-xs">
-          <BarraPontuacao pontos={pontosGeral} />
-        </div>
-        <p className="mt-2 text-xs text-slate-400">
-          Escala de Impacto: 0 = sem impacto · 100 = maior impacto
-        </p>
+        <LegendaGradiente />
       </div>
 
-      <h2 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-slate-400">
-        Índice por dimensão
-      </h2>
+      <h2 className="mb-3 mt-6 text-lg font-bold text-slate-800">Por dimensão</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {radar.map((d) => (
           <ScoreTile key={d.dimensao_id} label={d.dimensao_nome} valor1a5={d.media} />
         ))}
       </div>
-      <p className="mt-3 text-xs text-slate-400">
-        Cada resposta usa escala de 1 a 5. Os valores acima convertem essa média para a Escala
-        de Impacto (0 a 100): 1 → 0, 3 → 50, 5 → 100. O Impacto Geral é a média das 5 dimensões.
-      </p>
     </div>
   );
 }

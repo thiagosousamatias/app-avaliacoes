@@ -45,14 +45,14 @@ export function QrCodeCard({ slug, tamanho = "compact" }: QrCodeCardProps) {
         <button
           type="button"
           onClick={copiarLink}
-          className="flex-1 rounded-lg border border-slate-300 py-1.5 text-sm hover:bg-slate-50"
+          className="flex-1 rounded-full bg-slate-800 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700"
         >
           {copiado ? "Copiado!" : "Copiar link"}
         </button>
         <button
           type="button"
           onClick={baixarPng}
-          className="flex-1 rounded-lg border border-slate-300 py-1.5 text-sm hover:bg-slate-50"
+          className="flex-1 rounded-full border border-slate-300 bg-white py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
         >
           Baixar PNG
         </button>

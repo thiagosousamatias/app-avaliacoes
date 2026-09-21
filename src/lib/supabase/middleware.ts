@@ -28,11 +28,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Login automatico TEMPORARIO pra rotas /dashboard, sem pedir senha de ninguem: usa uma
-  // conta de servico fixa via env vars (nunca a conta pessoal). O signInWithPassword aqui
-  // usa o mesmo client (com os cookies grudados via setAll acima), entao a sessao resultante
-  // propaga tanto pro resto desta mesma requisicao quanto pro navegador. Remover este bloco
-  // restaura a exigencia normal de login.
+  // Login automatico pra rotas /dashboard, sem pedir senha de ninguem: nao ha mais tela de
+  // login no app, entao isso e a unica forma de obter uma sessao "authenticated" (exigida
+  // pelo RLS pra ler/apagar respostas). Usa uma conta de servico fixa via env vars (nunca a
+  // conta pessoal de ninguem). O signInWithPassword aqui usa o mesmo client (com os cookies
+  // grudados via setAll acima), entao a sessao resultante propaga tanto pro resto desta mesma
+  // requisicao quanto pro navegador. Pra voltar a exigir login de verdade, seria preciso
+  // reintroduzir a pagina /login e o guard em dashboard/layout.tsx, alem de remover este bloco.
   if (
     !user &&
     request.nextUrl.pathname.startsWith("/dashboard") &&

@@ -15,7 +15,7 @@ export function ShareQrButton({ slug }: ShareQrButtonProps) {
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
       >
         Compartilhar QR
       </button>

@@ -40,6 +40,16 @@ export function LikertButton({ valor, onChange, opcoes }: LikertButtonProps) {
 
   return (
     <div>
+      {/* Legenda de todas as opcoes, nao so as pontas - assim da pra ler o significado de
+          cada numero antes de escolher, sem precisar tocar pra descobrir. */}
+      <div className="mb-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
+        {escalas.map((n, i) => (
+          <span key={n}>
+            <strong className="font-semibold text-slate-600">{n}</strong> {labelDe(n, i)}
+          </span>
+        ))}
+      </div>
+
       <div className="grid grid-cols-5 gap-2">
         {escalas.map((n, i) => {
           const ativo = valor === n;
@@ -59,12 +69,9 @@ export function LikertButton({ valor, onChange, opcoes }: LikertButtonProps) {
           );
         })}
       </div>
-      <div className="mt-1.5 flex justify-between text-sm text-slate-500">
-        <span className="max-w-[45%]">{labelDe(1, 0)}</span>
-        <span className="max-w-[45%] text-right">{labelDe(5, 4)}</span>
-      </div>
+
       {labelSelecionado && (
-        <p className="mt-1 text-center text-base font-medium text-slate-700">{labelSelecionado}</p>
+        <p className="mt-2 text-center text-base font-medium text-slate-700">{labelSelecionado}</p>
       )}
     </div>
   );

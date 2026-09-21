@@ -63,10 +63,18 @@ export function SurveyForm({ dados }: SurveyFormProps) {
   if (enviado) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <Image src="/sesi-saude-logo.png" alt="SESI+ Saúde" width={1067} height={584} className="h-10 w-auto" />
+        <Image src="/jogos-sesi-saude-logo.png" alt="Jogos do SESI + Saúde" width={640} height={640} className="h-32 w-auto" />
+        <Image src="/sesi-institucional-logo.png" alt="SESI - Serviço Social da Indústria" width={373} height={106} className="h-10 w-auto" />
         <div className="text-5xl">✅</div>
         <h1 className="text-2xl font-bold text-slate-800">Obrigado pela participação!</h1>
         <p className="text-lg text-slate-600">Suas respostas foram registradas com sucesso.</p>
+        <p className="mt-4 text-xl font-semibold text-slate-800">
+          &ldquo;O SESI incentiva. A indústria vence&rdquo;
+        </p>
+        <p className="text-base text-slate-600">
+          Somos: Comprometimento; Orgulho de representar a empresa, Motivação; Espírito de
+          Equipe; Respeito
+        </p>
       </div>
     );
   }
@@ -74,14 +82,23 @@ export function SurveyForm({ dados }: SurveyFormProps) {
   return (
     <div className="mx-auto max-w-md px-4 pb-28 pt-6">
       <header className="mb-6">
-        <Image
-          src="/sesi-saude-logo.png"
-          alt="SESI+ Saúde"
-          width={1067}
-          height={584}
-          className="mb-4 h-10 w-auto"
-          priority
-        />
+        <div className="mb-4 flex items-center gap-3">
+          <Image
+            src="/jogos-sesi-saude-logo.png"
+            alt="Jogos do SESI + Saúde"
+            width={640}
+            height={640}
+            className="h-20 w-auto"
+            priority
+          />
+          <Image
+            src="/sesi-institucional-logo.png"
+            alt="SESI - Serviço Social da Indústria"
+            width={373}
+            height={106}
+            className="h-8 w-auto"
+          />
+        </div>
         <h1 className="text-2xl font-bold text-slate-800">{pesquisa.titulo}</h1>
         {pesquisa.descricao && (
           <p className="mt-1 text-base text-slate-500">{pesquisa.descricao}</p>

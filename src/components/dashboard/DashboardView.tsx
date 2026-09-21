@@ -6,13 +6,10 @@ import { useDashboardData } from "@/lib/dashboard/useDashboardData";
 import { useSessionScores } from "@/lib/dashboard/useSessionScores";
 import type { FiltroDashboard, Pesquisa } from "@/lib/types/survey";
 import { KpiCard } from "./KpiCard";
-import { RadarChart } from "./RadarChart";
 import { FilterPanel } from "./FilterPanel";
 import { ScoreIndex } from "./ScoreIndex";
-import { PrevalenceSection } from "./PrevalenceSection";
-import { ActivitySection } from "./ActivitySection";
-import { CorrelationsTable } from "./CorrelationsTable";
-import { AnovaSection } from "./AnovaSection";
+import { DichotomousSection } from "./DichotomousSection";
+import { OddsRatioSection } from "./OddsRatioSection";
 import { WordCloudSection } from "./WordCloudSection";
 import { ExportButtons } from "./ExportButtons";
 import { QrCodeCard } from "./QrCodeCard";
@@ -24,14 +21,21 @@ export function DashboardView({ pesquisa }: { pesquisa: Pesquisa }) {
 
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <Image
-          src="/sesi-saude-logo.png"
-          alt="SESI+ Saúde"
-          width={1067}
-          height={584}
-          className="h-9 w-auto"
+          src="/jogos-sesi-saude-logo.png"
+          alt="Jogos do SESI + Saúde"
+          width={640}
+          height={640}
+          className="h-16 w-auto"
           priority
+        />
+        <Image
+          src="/sesi-institucional-logo.png"
+          alt="SESI - Serviço Social da Indústria"
+          width={373}
+          height={106}
+          className="h-8 w-auto"
         />
         <div>
           <h1 className="text-2xl font-bold text-slate-800">{pesquisa.titulo}</h1>
@@ -56,6 +60,7 @@ function DashboardTabContent({ pesquisa }: { pesquisa: Pesquisa }) {
   const [filtros, setFiltros] = useState<FiltroDashboard[]>([]);
   const { data, loading, error } = useDashboardData(pesquisa.id, filtros);
   const sessionScores = useSessionScores(pesquisa.id);
+  const dimensoesNomes = (data?.radar ?? []).map((d) => d.dimensao_nome);
 
   return (
     <div className="space-y-8 print:space-y-4">
@@ -78,12 +83,7 @@ function DashboardTabContent({ pesquisa }: { pesquisa: Pesquisa }) {
       ) : (
         <>
           <KpiCard label="Total de respondentes" value={data?.kpis.total_respondentes ?? 0} />
-
           <ScoreIndex radar={data?.radar ?? []} impactoGeral={data?.kpis.media_geral ?? null} />
-
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:break-inside-avoid">
-            <RadarChart radar={data?.radar ?? []} />
-          </div>
         </>
       )}
 
@@ -96,31 +96,43 @@ function DashboardTabContent({ pesquisa }: { pesquisa: Pesquisa }) {
       {sessionScores.loading ? (
         <p className="text-slate-500">Carregando análises…</p>
       ) : sessionScores.sessoes.length < 3 ? (
-        <p className="text-sm text-slate-400">
-          Ainda não há respostas suficientes para calcular correlações e comparações
-          estatísticas (mínimo de 3 respondentes).
+        <p className="text-sm text-slate-500">
+          Ainda não há respostas suficientes para calcular comparações estatísticas (mínimo de
+          3 respondentes).
         </p>
       ) : (
         <>
-          <PrevalenceSection
-            sessoes={sessionScores.sessoes}
-            opcoesSaudeFisica={sessionScores.opcoesSaudeFisica}
-            opcoesSaudeMental={sessionScores.opcoesSaudeMental}
-          />
-          <ActivitySection
-            sessoes={sessionScores.sessoes}
-            opcoes={sessionScores.opcoesAtivoFisicamente}
-          />
-          <CorrelationsTable sessoes={sessionScores.sessoes} />
-          <AnovaSection
-            sessoes={sessionScores.sessoes}
-            opcoesSaudeFisica={sessionScores.opcoesSaudeFisica}
-            opcoesSaudeMental={sessionScores.opcoesSaudeMental}
-          />
+          <div>
+            <h2 className="mb-3 text-lg font-bold text-slate-800">Impacto Geral por perfil</h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <DichotomousSection
+                titulo="Saúde atual"
+                sessoes={sessionScores.sessoes}
+                getValor={(s) => (s.saude_fisica === null ? null : s.saude_fisica <= 3 ? 0 : 1)}
+                label0="Ruim"
+                label1="Boa"
+              />
+              <DichotomousSection
+                titulo="Saúde mental"
+                sessoes={sessionScores.sessoes}
+                getValor={(s) => (s.saude_mental === null ? null : s.saude_mental <= 3 ? 0 : 1)}
+                label0="Ruim"
+                label1="Boa"
+              />
+              <DichotomousSection
+                titulo="Fisicamente ativo"
+                sessoes={sessionScores.sessoes}
+                getValor={(s) => (s.ativo_fisicamente === null ? null : (s.ativo_fisicamente as 0 | 1))}
+                label0="Não"
+                label1="Sim"
+              />
+            </div>
+          </div>
+          <OddsRatioSection sessoes={sessionScores.sessoes} dimensoesNomes={dimensoesNomes} />
         </>
       )}
 
-      <WordCloudSection pesquisaId={pesquisa.id} />
+      <WordCloudSection pesquisaId={pesquisa.id} pesquisaSlug={pesquisa.slug} />
     </div>
   );
 }

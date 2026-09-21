@@ -26,10 +26,10 @@ export function DashboardTabs({
             role="tab"
             aria-selected={selecionada}
             onClick={() => onChange(aba.id)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+            className={`-mb-px border-b-[3px] px-4 py-2.5 text-base font-semibold transition-colors ${
               selecionada
                 ? "border-slate-800 text-slate-800"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                : "border-transparent text-slate-400 hover:text-slate-600"
             }`}
           >
             {aba.label}

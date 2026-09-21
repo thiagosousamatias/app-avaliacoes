@@ -40,15 +40,15 @@ const DIMENSOES = [
 ] as const;
 
 const QUESTOES_BLOCO2 = [
-  { chave: "q1", dimensao: "Mudança de Comportamento", ordem: 1, enunciado: "Os jogos esportivos me motivam a adotar hábitos saudáveis (como melhorar a alimentação ou o sono)." },
-  { chave: "q2", dimensao: "Mudança de Comportamento", ordem: 2, enunciado: "Participar dos jogos me dá vontade de praticar mais exercícios no meu tempo livre." },
-  { chave: "q3", dimensao: "Motivação, Pertencimento e Sentido", ordem: 1, enunciado: "Os jogos me dão mais energia e ânimo para lidar com os desafios do dia a dia." },
+  { chave: "q1", dimensao: "Mudança de Comportamento", ordem: 1, enunciado: "Os jogos do SESI me motivam a adotar hábitos saudáveis (como melhorar a alimentação ou o sono)." },
+  { chave: "q2", dimensao: "Mudança de Comportamento", ordem: 2, enunciado: "Participar dos jogos do SESI me dá vontade de praticar mais exercícios no meu tempo livre." },
+  { chave: "q3", dimensao: "Motivação, Pertencimento e Sentido", ordem: 1, enunciado: "Os jogos do SESI me dão mais energia e ânimo para lidar com os desafios do dia a dia." },
   { chave: "q4", dimensao: "Motivação, Pertencimento e Sentido", ordem: 2, enunciado: "Através do esporte, sinto que sou parte importante e valorizada da equipe." },
-  { chave: "q5", dimensao: "Clima e Sociabilidade", ordem: 1, enunciado: "Os jogos melhoram a convivência e o clima entre os diferentes setores da empresa." },
+  { chave: "q5", dimensao: "Clima e Sociabilidade", ordem: 1, enunciado: "Os jogos do SESI melhoram a convivência e o clima entre os diferentes setores da empresa." },
   { chave: "q6", dimensao: "Clima e Sociabilidade", ordem: 2, enunciado: "As partidas aumentam o companheirismo e a confiança com meus colegas de trabalho." },
   { chave: "q7", dimensao: "Engajamento e Força de Vontade", ordem: 1, enunciado: "Iniciativas esportivas me dão mais força de vontade para o meu dia a dia." },
   { chave: "q8", dimensao: "Engajamento e Força de Vontade", ordem: 2, enunciado: "Sinto orgulho em representar a minha empresa." },
-  { chave: "q9", dimensao: "Valores do Esporte", ordem: 1, enunciado: "A cooperação exigida nos jogos é um valor que eu valorizo para minha vida." },
+  { chave: "q9", dimensao: "Valores do Esporte", ordem: 1, enunciado: "A cooperação exigida nos jogos do SESI é um valor que eu valorizo para minha vida." },
   { chave: "q10", dimensao: "Valores do Esporte", ordem: 2, enunciado: "Lidar com vitórias e derrotas no esporte me ajuda a superar as frustrações do dia a dia." },
 ] as const;
 
@@ -100,7 +100,7 @@ const QUESTOES_PERFIL = [
   {
     chave: "mensagem_futuro",
     ordem: 5,
-    enunciado: "Deixe uma mensagem para o você do futuro (opcional).",
+    enunciado: "Para você, qual o maior valor do Esporte? (opcional)",
     tipo_resposta: "texto" as const,
     opcoes: { maxLength: 140 },
   },
@@ -114,7 +114,7 @@ async function main() {
         titulo: "Jogos do SESI/SC",
         slug: "jogos-esportivos",
         descricao:
-          "Queremos saber sua percepção sobre os jogos na sua vida. Sua resposta é anônima e serve para sempre melhorarmos nossos serviços para vocês. Muito Obrigado e bom jogos.",
+          "Queremos saber sua percepção sobre os jogos do SESI na sua vida. Sua resposta é anônima e serve para sempre melhorarmos nossos serviços para vocês. Muito Obrigado e bom jogos.",
         status: "ativo",
       },
       { onConflict: "slug" },

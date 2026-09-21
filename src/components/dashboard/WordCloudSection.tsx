@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { contarPalavrasPositivas, type PalavraContagem } from "@/lib/dashboard/positiveLexicon";
+import Link from "next/link";
+import { useNuvemPalavras } from "@/lib/dashboard/useNuvemPalavras";
 
 const TAMANHO_MIN_PX = 14;
 const TAMANHO_MAX_PX = 40;
@@ -13,31 +12,14 @@ function tamanhoFonte(n: number, max: number): number {
   return Math.round(TAMANHO_MIN_PX + proporcao * (TAMANHO_MAX_PX - TAMANHO_MIN_PX));
 }
 
-export function WordCloudSection({ pesquisaId }: { pesquisaId: string }) {
-  const [palavras, setPalavras] = useState<PalavraContagem[] | null>(null);
-  const [totalMensagens, setTotalMensagens] = useState(0);
-
-  useEffect(() => {
-    let cancelado = false;
-    const supabase = createClient();
-
-    supabase
-      .from("respostas_itens")
-      .select("valor_texto, questoes!inner(pesquisa_id, tipo_resposta)")
-      .eq("questoes.pesquisa_id", pesquisaId)
-      .eq("questoes.tipo_resposta", "texto")
-      .not("valor_texto", "is", null)
-      .then(({ data }) => {
-        if (cancelado) return;
-        const textos = (data ?? []).map((r) => r.valor_texto as string);
-        setTotalMensagens(textos.length);
-        setPalavras(contarPalavrasPositivas(textos));
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [pesquisaId]);
+export function WordCloudSection({
+  pesquisaId,
+  pesquisaSlug,
+}: {
+  pesquisaId: string;
+  pesquisaSlug: string;
+}) {
+  const { palavras, totalMensagens } = useNuvemPalavras(pesquisaId, 20_000);
 
   if (palavras === null) return null;
   if (totalMensagens === 0) return null;
@@ -46,21 +28,23 @@ export function WordCloudSection({ pesquisaId }: { pesquisaId: string }) {
 
   return (
     <div>
-      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
-        Nuvem de palavras (mensagens)
-      </h2>
-      <p className="mb-3 text-xs text-slate-400">
-        Palavras extraídas das {totalMensagens} mensagens abertas, filtradas por uma lista de
-        termos de caráter positivo — quanto maior a palavra, mais vezes apareceu. Não é uma
-        análise de sentimento completa, é um apoio visual rápido.
-      </p>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-800">Palavras mais citadas</h2>
+        <Link
+          href={`/dashboard/${pesquisaSlug}/nuvem`}
+          target="_blank"
+          className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 print:hidden"
+        >
+          Abrir tela ao vivo ↗
+        </Link>
+      </div>
 
       {palavras.length === 0 ? (
         <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-400 shadow-sm">
           Nenhuma palavra da lista positiva apareceu nas mensagens ainda.
         </p>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2">
             {palavras.map((p) => (
               <span

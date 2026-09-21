@@ -32,14 +32,26 @@ Next.js (App Router, TypeScript) + Tailwind CSS + Supabase (Postgres, Auth, RLS)
    npm run dev
    ```
    - Formulário público: `/pesquisa/jogos-esportivos`
-   - Login de gestor (e-mail + senha): `/login`
-   - Dashboard: `/dashboard`
+   - Dashboard: `/dashboard` (sem login — veja abaixo)
 
-## Configurar autenticação (Supabase Auth)
+## Autenticação do dashboard (sem tela de login)
 
-Login é e-mail + senha simples (sem confirmação por e-mail). Para cada gestor, crie o usuário
-direto no painel do Supabase: **Authentication → Users → Add user**, preenchendo e-mail e
-senha manualmente e marcando "Auto Confirm User".
+O `/dashboard` não pede e-mail/senha de ninguém — qualquer pessoa com o link acessa direto,
+inclusive a função de apagar respostas na aba Administração. Por baixo dos panos, o Supabase
+ainda exige uma sessão autenticada (RLS) pra ler/apagar dados, então o middleware
+(`src/lib/supabase/middleware.ts`) autentica toda requisição a `/dashboard*` sozinho, usando
+uma conta de serviço fixa (não é a conta pessoal de ninguém) guardada em duas variáveis de
+ambiente **só no servidor** (sem prefixo `NEXT_PUBLIC_`, nunca chegam ao navegador):
+
+```
+DASHBOARD_AUTH_EMAIL=
+DASHBOARD_AUTH_PASSWORD=
+```
+
+Pra criar essa conta de serviço no Supabase: **Authentication → Users → Add user**, com um
+e-mail qualquer (não precisa ser real) e uma senha forte gerada aleatoriamente, marcando
+"Auto Confirm User". Se algum dia quiser voltar a exigir login de verdade, é só remover essas
+duas variáveis e reintroduzir a tela de login.
 
 ## Estrutura
 

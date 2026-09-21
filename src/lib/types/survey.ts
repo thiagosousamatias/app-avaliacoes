@@ -61,7 +61,8 @@ export type DashboardData = {
 
 export type FiltroDashboard = {
   questao_id: string;
-  valor: number;
+  min: number;
+  max: number;
 };
 
 export type SessionScore = {

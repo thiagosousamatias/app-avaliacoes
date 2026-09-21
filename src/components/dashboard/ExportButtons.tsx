@@ -26,14 +26,14 @@ export function ExportButtons({ pesquisaId, pesquisaSlug }: ExportButtonsProps) 
         type="button"
         onClick={handleCsv}
         disabled={baixando}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         {baixando ? "Gerando…" : "Baixar dados (CSV)"}
       </button>
       <button
         type="button"
         onClick={() => window.print()}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        className="rounded-full bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700"
       >
         Baixar relatório (PDF)
       </button>

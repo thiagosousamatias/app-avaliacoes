@@ -62,6 +62,16 @@ const LEXICO_POSITIVO: EntradaLexico[] = [
   { canonico: "prazer" },
   { canonico: "diversão", variantes: ["divertido", "divertida"] },
 
+  // Valores do esporte (reforçado pra pergunta "qual o maior valor do Esporte?")
+  { canonico: "comprometimento", variantes: ["comprometido", "comprometida", "compromisso"] },
+  { canonico: "espírito" },
+  { canonico: "humildade", variantes: ["humilde"] },
+  { canonico: "ética", variantes: ["ético", "etica"] },
+  { canonico: "justiça", variantes: ["justo", "justa"] },
+  { canonico: "honestidade", variantes: ["honesto", "honesta"] },
+  { canonico: "integridade" },
+  { canonico: "generosidade", variantes: ["generoso", "generosa"] },
+
   // Social e equipe
   { canonico: "equipe", variantes: ["time"] },
   { canonico: "união", variantes: ["unido", "unida"] },

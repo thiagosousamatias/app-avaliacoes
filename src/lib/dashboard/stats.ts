@@ -1,7 +1,7 @@
-// Estatística inferencial leve, sem dependência externa: correlação de Spearman e ANOVA
-// one-way com post-hoc de Bonferroni (pares via teste t de Welch). Os p-valores usam a
-// função beta incompleta regularizada (algoritmo padrão, ex. Numerical Recipes), que dá as
-// distribuições t e F sem precisar de tabela ou biblioteca de estatística.
+// Estatística inferencial leve, sem dependência externa: teste t de Student e razão de
+// chances (odds ratio) via tabela 2x2. Os p-valores usam a função beta incompleta
+// regularizada (algoritmo padrão, ex. Numerical Recipes), que dá a distribuição t sem
+// precisar de tabela ou biblioteca de estatística.
 
 function logGamma(x: number): number {
   const cof = [
@@ -69,60 +69,19 @@ function tTwoTailedPValue(t: number, df: number): number {
   return regularizedIncompleteBeta(x, df / 2, 0.5);
 }
 
-// p-valor (cauda superior) de um F de Fisher com df1/df2 graus de liberdade.
-function fPValue(f: number, df1: number, df2: number): number {
-  if (f <= 0) return 1;
-  const x = df2 / (df2 + df1 * f);
-  return regularizedIncompleteBeta(x, df2 / 2, df1 / 2);
+function media(v: number[]) {
+  return v.reduce((s, x) => s + x, 0) / v.length;
 }
 
-function ranks(valores: number[]): number[] {
-  const indices = valores.map((_, i) => i).sort((a, b) => valores[a] - valores[b]);
-  const out = new Array(valores.length);
-  let i = 0;
-  while (i < indices.length) {
-    let j = i;
-    while (j + 1 < indices.length && valores[indices[j + 1]] === valores[indices[i]]) j++;
-    const rankMedio = (i + j) / 2 + 1; // ranks 1-based, empates recebem a media do intervalo
-    for (let k = i; k <= j; k++) out[indices[k]] = rankMedio;
-    i = j + 1;
-  }
-  return out;
+function variancia(v: number[], m: number) {
+  if (v.length < 2) return 0;
+  return v.reduce((s, x) => s + (x - m) ** 2, 0) / (v.length - 1);
 }
 
-export type CorrelationResult = {
-  n: number;
-  rho: number | null;
-  pValor: number | null;
-};
-
-// Correlação de Spearman: Pearson calculado sobre os ranks (com correção de empates).
-export function spearman(x: number[], y: number[]): CorrelationResult {
-  const pares = x.map((xi, i) => [xi, y[i]] as const).filter(([a, b]) => a != null && b != null);
-  const n = pares.length;
-  if (n < 3) return { n, rho: null, pValor: null };
-
-  const rx = ranks(pares.map((p) => p[0]));
-  const ry = ranks(pares.map((p) => p[1]));
-  const mx = rx.reduce((s, v) => s + v, 0) / n;
-  const my = ry.reduce((s, v) => s + v, 0) / n;
-
-  let cov = 0;
-  let vx = 0;
-  let vy = 0;
-  for (let i = 0; i < n; i++) {
-    cov += (rx[i] - mx) * (ry[i] - my);
-    vx += (rx[i] - mx) ** 2;
-    vy += (ry[i] - my) ** 2;
-  }
-  if (vx === 0 || vy === 0) return { n, rho: null, pValor: null };
-
-  const rho = cov / Math.sqrt(vx * vy);
-  const df = n - 2;
-  if (df < 1 || Math.abs(rho) >= 1) return { n, rho, pValor: df < 1 ? null : 0 };
-  const t = (rho * Math.sqrt(df)) / Math.sqrt(1 - rho * rho);
-  const pValor = tTwoTailedPValue(t, df);
-  return { n, rho, pValor };
+export function mediana(valores: number[]): number {
+  const s = [...valores].sort((a, b) => a - b);
+  const meio = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[meio - 1] + s[meio]) / 2 : s[meio];
 }
 
 export type StudentTTestResult = {
@@ -136,8 +95,7 @@ export type StudentTTestResult = {
 };
 
 // Teste t de Student para 2 amostras independentes, variancia agrupada (pooled) - a forma
-// classica do teste, diferente do post-hoc de Welch usado na ANOVA (que assume variancias
-// desiguais). Serve para comparar 2 grupos, como "ativo fisicamente: sim" vs "nao".
+// classica do teste. Serve para comparar 2 grupos, como "ativo fisicamente: sim" vs "nao".
 export function studentTTest(a: number[], b: number[]): StudentTTestResult {
   const nA = a.length;
   const nB = b.length;
@@ -161,112 +119,38 @@ export function studentTTest(a: number[], b: number[]): StudentTTestResult {
   return { nA, nB, mediaA, mediaB, t, df, pValor };
 }
 
-export type GrupoAnova = {
-  categoria: number;
-  label: string;
-  n: number;
-  media: number;
-  desvio: number;
-};
-
-export type PosHocPar = {
-  a: string;
-  b: string;
-  diferenca: number;
-  pValor: number;
-  pAjustado: number;
+export type OddsRatioResult = {
+  or: number;
   significativo: boolean;
+  n: number;
 };
 
-export type AnovaResult = {
-  grupos: GrupoAnova[];
-  f: number | null;
-  df1: number | null;
-  df2: number | null;
-  pValor: number | null;
-  posHoc: PosHocPar[];
-};
+// Razao de chances via tabela 2x2, com correcao de Haldane-Anscombe (+0.5 em cada celula,
+// evita divisao por zero com amostras pequenas/desbalanceadas). Com preditor e desfecho
+// binarios, isso e numericamente identico ao que uma regressao logistica binaria univariada
+// devolveria - mais simples de implementar certo do que ajustar um modelo iterativamente.
+// `desfecho` e `preditor` devem estar pareados por indice e sem valores nulos (filtrar antes
+// de chamar).
+export function oddsRatio(desfecho: (0 | 1)[], preditor: (0 | 1)[]): OddsRatioResult {
+  let a = 0.5; // preditor=1, desfecho=1
+  let b = 0.5; // preditor=1, desfecho=0
+  let c = 0.5; // preditor=0, desfecho=1
+  let d = 0.5; // preditor=0, desfecho=0
 
-function media(v: number[]) {
-  return v.reduce((s, x) => s + x, 0) / v.length;
-}
-
-function variancia(v: number[], m: number) {
-  if (v.length < 2) return 0;
-  return v.reduce((s, x) => s + (x - m) ** 2, 0) / (v.length - 1);
-}
-
-// ANOVA one-way + post-hoc de pares via teste t de Welch com correção de Bonferroni.
-// Bonferroni (em vez de Tukey HSD) porque nao depende da distribuicao do alcance
-// estudentizado (sem forma fechada via beta incompleta) - mais simples de implementar
-// corretamente, ao custo de ser um pouco mais conservador.
-export function oneWayAnova(
-  grupos: { categoria: number; label: string; valores: number[] }[],
-): AnovaResult {
-  const validos = grupos.filter((g) => g.valores.length >= 2);
-  const resumo: GrupoAnova[] = validos.map((g) => {
-    const m = media(g.valores);
-    return {
-      categoria: g.categoria,
-      label: g.label,
-      n: g.valores.length,
-      media: m,
-      desvio: Math.sqrt(variancia(g.valores, m)),
-    };
-  });
-
-  if (validos.length < 2) {
-    return { grupos: resumo, f: null, df1: null, df2: null, pValor: null, posHoc: [] };
+  const n = Math.min(desfecho.length, preditor.length);
+  for (let i = 0; i < n; i++) {
+    if (preditor[i] === 1 && desfecho[i] === 1) a++;
+    else if (preditor[i] === 1 && desfecho[i] === 0) b++;
+    else if (preditor[i] === 0 && desfecho[i] === 1) c++;
+    else d++;
   }
 
-  const todos = validos.flatMap((g) => g.valores);
-  const mediaGeral = media(todos);
-  const dfBetween = validos.length - 1;
-  const dfWithin = todos.length - validos.length;
+  const or = (a * d) / (b * c);
+  const seLnOr = Math.sqrt(1 / a + 1 / b + 1 / c + 1 / d);
+  const lnOr = Math.log(or);
+  const ciBaixo = Math.exp(lnOr - 1.96 * seLnOr);
+  const ciAlto = Math.exp(lnOr + 1.96 * seLnOr);
+  const significativo = ciBaixo > 1 || ciAlto < 1;
 
-  let ssBetween = 0;
-  let ssWithin = 0;
-  validos.forEach((g) => {
-    const m = media(g.valores);
-    ssBetween += g.valores.length * (m - mediaGeral) ** 2;
-    ssWithin += g.valores.reduce((s, x) => s + (x - m) ** 2, 0);
-  });
-
-  const msBetween = ssBetween / dfBetween;
-  const msWithin = dfWithin > 0 ? ssWithin / dfWithin : 0;
-  const f = msWithin > 0 ? msBetween / msWithin : null;
-  const pValor = f !== null && dfWithin > 0 ? fPValue(f, dfBetween, dfWithin) : null;
-
-  const pares: PosHocPar[] = [];
-  const nComparacoes = (validos.length * (validos.length - 1)) / 2;
-  for (let i = 0; i < validos.length; i++) {
-    for (let j = i + 1; j < validos.length; j++) {
-      const a = validos[i];
-      const b = validos[j];
-      const ma = media(a.valores);
-      const mb = media(b.valores);
-      const va = variancia(a.valores, ma);
-      const vb = variancia(b.valores, mb);
-      const se = Math.sqrt(va / a.valores.length + vb / b.valores.length);
-      if (se === 0) continue;
-      const t = (ma - mb) / se;
-      // Graus de liberdade de Welch-Satterthwaite.
-      const df =
-        (va / a.valores.length + vb / b.valores.length) ** 2 /
-        ((va / a.valores.length) ** 2 / (a.valores.length - 1) +
-          (vb / b.valores.length) ** 2 / (b.valores.length - 1));
-      const pParcial = tTwoTailedPValue(Math.abs(t), df);
-      const pAjustado = Math.min(1, pParcial * nComparacoes);
-      pares.push({
-        a: a.label,
-        b: b.label,
-        diferenca: ma - mb,
-        pValor: pParcial,
-        pAjustado,
-        significativo: pAjustado < 0.05,
-      });
-    }
-  }
-
-  return { grupos: resumo, f, df1: dfBetween, df2: dfWithin, pValor, posHoc: pares };
+  return { or, significativo, n };
 }
