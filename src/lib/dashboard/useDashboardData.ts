@@ -13,17 +13,23 @@ export function useDashboardData(pesquisaId: string, filtros: FiltroDashboard[])
   // Sem estado de "loading" dedicado: setState() antes do primeiro `await` dentro de um
   // efeito dispara o lint react-hooks/set-state-in-effect. `loading` e derivado de `data`.
   const fetchData = useCallback(async () => {
-    const supabase = createClient();
-    const { data: result, error: rpcError } = await supabase.rpc("get_dashboard_data", {
-      p_pesquisa_id: pesquisaId,
-      p_filtros: filtros,
-    });
+    try {
+      const supabase = createClient();
+      const { data: result, error: rpcError } = await supabase.rpc("get_dashboard_data", {
+        p_pesquisa_id: pesquisaId,
+        p_filtros: filtros,
+      });
 
-    if (rpcError) {
-      setError(rpcError.message);
-    } else {
-      setData(result as DashboardData);
-      setError(null);
+      if (rpcError) {
+        setError(rpcError.message);
+      } else {
+        setData(result as DashboardData);
+        setError(null);
+      }
+    } catch (e) {
+      // Falha de rede (bloqueio, DNS, sem conexao) nunca chega no {error} do supabase-js -
+      // sem isso, a tela ficaria "carregando" pra sempre, sem nenhuma mensagem.
+      setError(e instanceof Error ? e.message : "Não foi possível carregar os dados.");
     }
   }, [pesquisaId, filtros]);
 

@@ -28,33 +28,44 @@ export function useSessionScores(pesquisaId: string): SessionScoresState {
     const supabase = createClient();
 
     async function carregar() {
-      const [{ data: sessoes, error: rpcError }, { data: questoesPerfil }] = await Promise.all([
-        supabase.rpc("get_session_scores", { p_pesquisa_id: pesquisaId }),
-        supabase
-          .from("questoes")
-          .select("chave, opcoes")
-          .eq("pesquisa_id", pesquisaId)
-          .in("chave", ["saude_fisica", "saude_mental", "ativo_fisicamente"]),
-      ]);
+      try {
+        const [{ data: sessoes, error: rpcError }, { data: questoesPerfil }] = await Promise.all([
+          supabase.rpc("get_session_scores", { p_pesquisa_id: pesquisaId }),
+          supabase
+            .from("questoes")
+            .select("chave, opcoes")
+            .eq("pesquisa_id", pesquisaId)
+            .in("chave", ["saude_fisica", "saude_mental", "ativo_fisicamente"]),
+        ]);
 
-      if (cancelado) return;
+        if (cancelado) return;
 
-      if (rpcError) {
-        setState((s) => ({ ...s, loading: false, error: rpcError.message }));
-        return;
+        if (rpcError) {
+          setState((s) => ({ ...s, loading: false, error: rpcError.message }));
+          return;
+        }
+
+        const opcoesDe = (chave: string) =>
+          questoesPerfil?.find((q) => q.chave === chave)?.opcoes ?? [];
+
+        setState({
+          sessoes: (sessoes as SessionScore[]) ?? [],
+          opcoesSaudeFisica: opcoesDe("saude_fisica"),
+          opcoesSaudeMental: opcoesDe("saude_mental"),
+          opcoesAtivoFisicamente: opcoesDe("ativo_fisicamente"),
+          loading: false,
+          error: null,
+        });
+      } catch (e) {
+        // Falha de rede (bloqueio, DNS, sem conexao) nunca chega no {error} do supabase-js -
+        // sem isso, a tela ficaria "carregando" pra sempre, sem nenhuma mensagem.
+        if (cancelado) return;
+        setState((s) => ({
+          ...s,
+          loading: false,
+          error: e instanceof Error ? e.message : "Não foi possível carregar os dados.",
+        }));
       }
-
-      const opcoesDe = (chave: string) =>
-        questoesPerfil?.find((q) => q.chave === chave)?.opcoes ?? [];
-
-      setState({
-        sessoes: (sessoes as SessionScore[]) ?? [],
-        opcoesSaudeFisica: opcoesDe("saude_fisica"),
-        opcoesSaudeMental: opcoesDe("saude_mental"),
-        opcoesAtivoFisicamente: opcoesDe("ativo_fisicamente"),
-        loading: false,
-        error: null,
-      });
     }
 
     carregar();

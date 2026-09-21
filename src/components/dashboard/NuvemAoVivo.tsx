@@ -19,7 +19,7 @@ function corDe(proporcao: number): string {
 }
 
 export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
-  const { palavras } = useNuvemPalavras(pesquisa.id, 8_000);
+  const { palavras, error } = useNuvemPalavras(pesquisa.id, 8_000);
   const maxN = palavras?.[0]?.n ?? 1;
 
   return (
@@ -43,7 +43,11 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
       </div>
       <h1 className="mb-12 text-4xl font-bold text-white">Valores do Esporte</h1>
 
-      {!palavras || palavras.length === 0 ? (
+      {error ? (
+        <p className="max-w-lg text-lg text-red-400">
+          Não foi possível carregar as mensagens: {error}
+        </p>
+      ) : !palavras || palavras.length === 0 ? (
         <p className="text-xl text-slate-500">Aguardando as primeiras respostas…</p>
       ) : (
         <div className="flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-6">

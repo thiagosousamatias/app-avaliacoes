@@ -19,7 +19,15 @@ export function WordCloudSection({
   pesquisaId: string;
   pesquisaSlug: string;
 }) {
-  const { palavras, totalMensagens } = useNuvemPalavras(pesquisaId, 20_000);
+  const { palavras, totalMensagens, error } = useNuvemPalavras(pesquisaId, 20_000);
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+        Não foi possível carregar as mensagens: {error}
+      </div>
+    );
+  }
 
   if (palavras === null) return null;
   if (totalMensagens === 0) return null;
