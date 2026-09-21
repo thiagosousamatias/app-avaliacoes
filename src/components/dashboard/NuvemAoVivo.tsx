@@ -22,6 +22,17 @@ function tamanhoFonte(proporcao: number): string {
   return `clamp(${PX_PISO}px, ${vw}vw, ${PX_TETO}px)`;
 }
 
+// Quantas palavras "se formam" no ranking fixo - o resto continua chegando/flutuando na outra
+// zona ate crescer o suficiente pra entrar aqui.
+const TOP_N_RANKING = 8;
+
+// Escala bem mais contida que a nuvem principal - e uma coluna/faixa estreita com varias
+// linhas empilhadas, nao o centro da tela.
+function tamanhoFonteRanking(proporcao: number): string {
+  const vw = 2 + proporcao * 3;
+  return `clamp(15px, ${vw}vw, 34px)`;
+}
+
 // Interpola de cinza-azulado escuro (pouco citada) a verde-esmeralda vivo (muito citada).
 function corDe(proporcao: number): string {
   const de = { r: 100, g: 116, b: 139 }; // slate-500
@@ -40,9 +51,43 @@ function hash(s: string): number {
   return h;
 }
 
+function PalavraSpan({
+  palavra,
+  fontSize,
+  cor,
+  emDestaque,
+}: {
+  palavra: string;
+  fontSize: string;
+  cor: string;
+  emDestaque: boolean;
+}) {
+  const h = hash(palavra);
+  const flutuar = `flutuar ${4 + (h % 30) / 10}s ease-in-out ${(h % 40) / 10}s infinite`;
+  // O halo entra como uma 2a animacao na mesma propriedade "animation" - por afetarem
+  // "transform" as duas juntas, o halo (mais recente na lista) assume o transform enquanto
+  // toca, entao a flutuacao pausa por ~2.5s e retoma sozinha quando o keyframe termina. Efeito
+  // aceitavel: um "pulso" em vez de flutuar+crescer ao mesmo tempo.
+  const animacao = emDestaque ? `${flutuar}, halo 2.5s ease-out` : flutuar;
+  return (
+    <span
+      className="font-bold leading-none transition-[font-size,color] duration-700"
+      style={{ fontSize, color: cor, display: "inline-block", animation: animacao }}
+    >
+      {palavra}
+    </span>
+  );
+}
+
 export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
   const { palavras, error } = useNuvemPalavras(pesquisa.id, 8_000);
   const maxN = palavras?.[0]?.n ?? 1;
+
+  // palavras ja vem ordenada por n desc (contarPalavrasPositivas) - as primeiras TOP_N_RANKING
+  // "se formam" no ranking fixo, o resto continua na zona de chegada ate crescer o bastante
+  // pra entrar. Sem isso fica dificil bater o olho e saber o que mais importa na nuvem.
+  const ranking = palavras?.slice(0, TOP_N_RANKING) ?? [];
+  const chegando = palavras?.slice(TOP_N_RANKING) ?? [];
 
   // Marca palavras cuja contagem acabou de subir (nova palavra ou mencionada de novo) pra
   // receberem o halo. Compara cada leitura com a anterior guardada num ref - so entra em
@@ -102,6 +147,48 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           background-size: 300% 300%;
           animation: fundoVivo 18s ease-in-out infinite;
         }
+        .nuvem-corpo {
+          display: flex;
+          flex: 1 1 auto;
+          flex-direction: row;
+          overflow: hidden;
+        }
+        .zona-chegada {
+          flex: 1 1 auto;
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          padding: 0.5rem;
+        }
+        .zona-ranking {
+          flex: 0 0 300px;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          overflow: hidden;
+          padding: 1rem 1.25rem;
+          border-left: 1px solid rgba(16, 185, 129, 0.18);
+        }
+        /* O totem fica de pe (retrato) - colunas lado a lado ficariam apertadas demais, entao
+           empilha a zona de chegada em cima e o ranking embaixo nessa orientacao. Usar
+           orientation (nao largura) porque um totem em pe pode ter resolucao larga mesmo assim. */
+        @media (orientation: portrait) {
+          .nuvem-corpo {
+            flex-direction: column;
+          }
+          .zona-ranking {
+            flex: 0 0 38%;
+            width: 100%;
+            border-left: none;
+            border-top: 1px solid rgba(16, 185, 129, 0.18);
+          }
+        }
       `}</style>
       <div className="fundo-animado absolute inset-0 -z-10" />
 
@@ -126,42 +213,58 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
         Valores do Esporte
       </h1>
 
-      <div className="flex flex-1 items-center justify-center overflow-hidden">
-        {error ? (
+      {error ? (
+        <div className="flex flex-1 items-center justify-center overflow-hidden">
           <p className="max-w-lg text-lg text-red-400">
             Não foi possível carregar as mensagens: {error}
           </p>
-        ) : !palavras || palavras.length === 0 ? (
+        </div>
+      ) : !palavras || palavras.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center overflow-hidden">
           <p className="text-xl text-slate-500">Aguardando as primeiras respostas…</p>
-        ) : (
-          <div className="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-8 sm:gap-y-5">
-            {palavras.map((p) => {
+        </div>
+      ) : (
+        <div className="nuvem-corpo">
+          <div className="zona-chegada">
+            {chegando.length === 0 ? (
+              <p className="text-lg text-slate-600">Novas respostas aparecem aqui…</p>
+            ) : (
+              <div className="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-8 sm:gap-y-5">
+                {chegando.map((p) => {
+                  const proporcao = maxN > 1 ? (p.n - 1) / (maxN - 1) : 1;
+                  return (
+                    <PalavraSpan
+                      key={p.palavra}
+                      palavra={p.palavra}
+                      fontSize={tamanhoFonte(proporcao)}
+                      cor={corDe(proporcao)}
+                      emDestaque={destaque.has(p.palavra)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="zona-ranking">
+            <p className="mb-1 shrink-0 text-xs font-semibold tracking-[0.2em] text-emerald-500/70 uppercase">
+              Mais citadas
+            </p>
+            {ranking.map((p) => {
               const proporcao = maxN > 1 ? (p.n - 1) / (maxN - 1) : 1;
-              const h = hash(p.palavra);
-              const flutuar = `flutuar ${4 + (h % 30) / 10}s ease-in-out ${(h % 40) / 10}s infinite`;
-              // O halo entra como uma 2a animacao na mesma propriedade "animation" - por
-              // afetarem "transform" as duas juntas, o halo (mais recente na lista) assume o
-              // transform enquanto toca, entao a flutuacao pausa por ~2.5s e retoma sozinha
-              // quando o keyframe termina. Efeito aceitavel: um "pulso" em vez de flutuar+crescer.
-              const animacao = destaque.has(p.palavra) ? `${flutuar}, halo 2.5s ease-out` : flutuar;
               return (
-                <span
+                <PalavraSpan
                   key={p.palavra}
-                  className="font-bold leading-none transition-[font-size,color] duration-700"
-                  style={{
-                    fontSize: tamanhoFonte(proporcao),
-                    color: corDe(proporcao),
-                    display: "inline-block",
-                    animation: animacao,
-                  }}
-                >
-                  {p.palavra}
-                </span>
+                  palavra={p.palavra}
+                  fontSize={tamanhoFonteRanking(proporcao)}
+                  cor={corDe(proporcao)}
+                  emDestaque={destaque.has(p.palavra)}
+                />
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
