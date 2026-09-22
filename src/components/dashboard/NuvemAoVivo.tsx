@@ -219,6 +219,13 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           priority
         />
         <Image
+          src="/sesi-saude-logo.png"
+          alt="SESI + Saúde"
+          width={1067}
+          height={584}
+          className="h-9 w-auto sm:h-12"
+        />
+        <Image
           src="/sesi-institucional-logo.png"
           alt="SESI - Serviço Social da Indústria"
           width={373}

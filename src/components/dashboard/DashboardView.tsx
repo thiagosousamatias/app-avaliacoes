@@ -21,7 +21,7 @@ export function DashboardView({ pesquisa }: { pesquisa: Pesquisa }) {
 
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Image
           src="/jogos-sesi-saude-logo.png"
           alt="Jogos do SESI + Saúde"
@@ -29,6 +29,13 @@ export function DashboardView({ pesquisa }: { pesquisa: Pesquisa }) {
           height={640}
           className="h-16 w-auto"
           priority
+        />
+        <Image
+          src="/sesi-saude-logo.png"
+          alt="SESI + Saúde"
+          width={1067}
+          height={584}
+          className="h-8 w-auto"
         />
         <Image
           src="/sesi-institucional-logo.png"
