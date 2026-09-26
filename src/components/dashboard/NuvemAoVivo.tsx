@@ -33,10 +33,13 @@ function tamanhoFonteRanking(proporcao: number): string {
   return `clamp(15px, ${vw}vw, 34px)`;
 }
 
-// Interpola de cinza-azulado escuro (pouco citada) a verde-esmeralda vivo (muito citada).
-function corDe(proporcao: number): string {
-  const de = { r: 100, g: 116, b: 139 }; // slate-500
-  const para = { r: 52, g: 211, b: 153 }; // emerald-400
+// Interpola de "pouco citada" a "muito citada". No modo escuro vai de cinza-azulado a
+// verde-esmeralda vivo (contrasta com fundo escuro); no modo claro vai de cinza mais neutro a
+// um verde bem mais escuro/saturado - um verde vivo comum (tipo emerald-400) quase some no
+// fundo branco, precisa de bem mais peso de cor pra manter contraste com claridade forte.
+function corDe(proporcao: number, claro: boolean): string {
+  const de = claro ? { r: 148, g: 163, b: 184 } : { r: 100, g: 116, b: 139 }; // slate-400 / slate-500
+  const para = claro ? { r: 4, g: 87, b: 60 } : { r: 52, g: 211, b: 153 }; // verde bem escuro / emerald-400
   const r = Math.round(de.r + (para.r - de.r) * proporcao);
   const g = Math.round(de.g + (para.g - de.g) * proporcao);
   const b = Math.round(de.b + (para.b - de.b) * proporcao);
@@ -96,9 +99,38 @@ function PalavraSpan({
   );
 }
 
+// Chave do localStorage pra lembrar a escolha entre uma troca de aba/reload do totem.
+const CHAVE_TEMA = "nuvem-tema";
+
 export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
   const { palavras, error } = useNuvemPalavras(pesquisa.id, 8_000);
   const maxN = palavras?.[0]?.n ?? 1;
+
+  // Comeca escuro (era o unico modo ate agora) e so troca depois de montar, lendo o
+  // localStorage - fazer isso no useState inicial quebraria a hidratacao (servidor sempre
+  // renderiza escuro, ja que nao tem acesso ao localStorage do navegador).
+  const [claro, setClaro] = useState(false);
+  useEffect(() => {
+    try {
+      // Sincroniza com o localStorage (sistema externo) uma unica vez ao montar - o lint
+      // generaliza demais essa regra pra casos assim, mesmo padrao ja usado nos hooks de
+      // busca de dados deste projeto.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (localStorage.getItem(CHAVE_TEMA) === "claro") setClaro(true);
+    } catch {
+      // Sem acesso ao localStorage (navegador privado etc.) - so mantem o padrao escuro.
+    }
+  }, []);
+
+  function alternarTema() {
+    setClaro((atual) => {
+      const novo = !atual;
+      try {
+        localStorage.setItem(CHAVE_TEMA, novo ? "claro" : "escuro");
+      } catch {}
+      return novo;
+    });
+  }
 
   // palavras ja vem ordenada por n desc (contarPalavrasPositivas) - as primeiras TOP_N_RANKING
   // "se formam" no ranking fixo, o resto continua na zona de chegada ate crescer o bastante
@@ -148,7 +180,9 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
   }, [palavras]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-slate-950 px-4 py-6 text-center sm:px-8 sm:py-8">
+    <div
+      className={`fixed inset-0 z-50 flex flex-col overflow-hidden px-4 py-6 text-center sm:px-8 sm:py-8 ${claro ? "bg-white" : "bg-slate-950"}`}
+    >
       <style>{`
         @keyframes flutuar {
           0%, 100% { transform: translateY(0); }
@@ -164,8 +198,13 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        .fundo-animado {
+        .fundo-animado-escuro {
           background: linear-gradient(120deg, #020617, #0f172a, #022c22, #0f172a, #020617);
+          background-size: 300% 300%;
+          animation: fundoVivo 18s ease-in-out infinite;
+        }
+        .fundo-animado-claro {
+          background: linear-gradient(120deg, #ffffff, #f8fafc, #ecfdf5, #f8fafc, #ffffff);
           background-size: 300% 300%;
           animation: fundoVivo 18s ease-in-out infinite;
         }
@@ -212,7 +251,21 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           }
         }
       `}</style>
-      <div className="fundo-animado absolute inset-0 -z-10" />
+      <div className={`${claro ? "fundo-animado-claro" : "fundo-animado-escuro"} absolute inset-0 -z-10`} />
+
+      <button
+        type="button"
+        onClick={alternarTema}
+        aria-label={claro ? "Mudar para modo escuro" : "Mudar para modo claro (mais contraste com muita luz ambiente)"}
+        title={claro ? "Mudar para modo escuro" : "Mudar para modo claro (mais contraste com muita luz ambiente)"}
+        className={`fixed right-4 bottom-4 z-[60] flex h-12 w-12 items-center justify-center rounded-full text-2xl shadow-lg backdrop-blur transition-colors ${
+          claro
+            ? "bg-slate-900/10 text-slate-900 hover:bg-slate-900/20"
+            : "bg-white/10 text-white hover:bg-white/20"
+        }`}
+      >
+        {claro ? "🌙" : "☀️"}
+      </button>
 
       <div className="mb-4 flex shrink-0 flex-col items-center gap-3 sm:mb-8 sm:flex-row sm:justify-center sm:gap-6">
         <Image
@@ -235,16 +288,18 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           alt="SESI - Serviço Social da Indústria"
           width={373}
           height={106}
-          className="h-7 w-auto brightness-0 invert sm:h-10"
+          className={`h-7 w-auto sm:h-10 ${claro ? "" : "brightness-0 invert"}`}
         />
       </div>
-      <h1 className="mb-4 shrink-0 text-2xl font-bold text-white sm:mb-10 sm:text-4xl">
+      <h1
+        className={`mb-4 shrink-0 text-2xl font-bold sm:mb-10 sm:text-4xl ${claro ? "text-slate-900" : "text-white"}`}
+      >
         Valores do Esporte
       </h1>
 
       {error ? (
         <div className="flex flex-1 items-center justify-center overflow-hidden">
-          <p className="max-w-lg text-lg text-red-400">
+          <p className={`max-w-lg text-lg ${claro ? "text-red-600" : "text-red-400"}`}>
             Não foi possível carregar as mensagens: {error}
           </p>
         </div>
@@ -256,7 +311,9 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
         <div className="nuvem-corpo">
           <div className="zona-chegada">
             {chegando.length === 0 ? (
-              <p className="text-lg text-slate-600">Novas respostas aparecem aqui…</p>
+              <p className={`text-lg ${claro ? "text-slate-500" : "text-slate-600"}`}>
+                Novas respostas aparecem aqui…
+              </p>
             ) : (
               <div className="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-8 sm:gap-y-5">
                 {chegando.map((p) => {
@@ -266,7 +323,7 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
                       key={p.palavra}
                       palavra={p.palavra}
                       fontSize={tamanhoFonte(proporcao)}
-                      cor={corDe(proporcao)}
+                      cor={corDe(proporcao, claro)}
                       emDestaque={destaque.has(p.palavra)}
                     />
                   );
@@ -276,7 +333,9 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
           </div>
 
           <div className="zona-ranking">
-            <p className="mb-1 shrink-0 text-xs font-semibold tracking-[0.2em] text-emerald-500/70 uppercase">
+            <p
+              className={`mb-1 shrink-0 text-xs font-semibold tracking-[0.2em] uppercase ${claro ? "text-emerald-700/80" : "text-emerald-500/70"}`}
+            >
               Nosso Ranking de Valores
             </p>
             {ranking.map((p) => {
@@ -286,7 +345,7 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
                   key={p.palavra}
                   palavra={p.palavra}
                   fontSize={tamanhoFonteRanking(proporcao)}
-                  cor={corDe(proporcao)}
+                  cor={corDe(proporcao, claro)}
                   emDestaque={false}
                   estatico
                 />
