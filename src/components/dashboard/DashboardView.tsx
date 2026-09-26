@@ -19,9 +19,11 @@ import { DashboardTabs, type AbaDashboard } from "./DashboardTabs";
 export function DashboardView({ pesquisa }: { pesquisa: Pesquisa }) {
   const [aba, setAba] = useState<AbaDashboard>("dashboard");
 
+  const geradoEm = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4 print:hidden">
         <Image
           src="/jogos-sesi-saude-logo.png"
           alt="Jogos do SESI + Saúde"
@@ -47,6 +49,33 @@ export function DashboardView({ pesquisa }: { pesquisa: Pesquisa }) {
         <div>
           <h1 className="text-2xl font-bold text-slate-800">{pesquisa.titulo}</h1>
           <p className="text-sm text-slate-500">/{pesquisa.slug}</p>
+        </div>
+      </div>
+
+      {/* So aparece no PDF/impressao - a URL/slug da tela normal e um detalhe tecnico sem
+          valor pra quem le o relatorio; no lugar dela entra a data/hora de geracao. */}
+      <div className="hidden overflow-hidden rounded-2xl bg-gradient-to-br from-violet-700 via-indigo-600 to-emerald-500 p-6 text-white print:block">
+        <div className="flex items-center gap-4">
+          <Image
+            src="/jogos-sesi-saude-logo.png"
+            alt="Jogos do SESI + Saúde"
+            width={640}
+            height={640}
+            className="h-14 w-auto"
+          />
+          <Image
+            src="/sesi-institucional-logo.png"
+            alt="SESI - Serviço Social da Indústria"
+            width={373}
+            height={106}
+            className="h-8 w-auto brightness-0 invert"
+          />
+          <div>
+            <h1 className="text-2xl font-black tracking-tight uppercase italic">
+              {pesquisa.titulo}
+            </h1>
+            <p className="text-sm font-medium text-white/80">Relatório gerado em {geradoEm}</p>
+          </div>
         </div>
       </div>
 

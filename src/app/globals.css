@@ -21,3 +21,14 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Sem isso, o navegador some com toda cor de fundo (barras, badges, faixas de cor) ao
+   imprimir/gerar PDF - e o motivo do relatorio sair "sem os elementos graficos": eles nao
+   sumiam de verdade, so perdiam a cor de fundo que os desenha (bg-* do Tailwind e so
+   background-color). */
+@media print {
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+}
