@@ -32,17 +32,29 @@ function ScoreTile({ label, valor1a5 }: { label: string; valor1a5: number | null
   );
 }
 
-function LegendaGradiente() {
+// Barra grande do indice geral, com escala numerica (0-100) e os extremos nomeados - o numero
+// grande sozinho nao deixava claro que 0 = sem impacto e 100 = impacto maximo.
+function BarraIndiceGeral({ pontos }: { pontos: number | null }) {
+  const p = pontos ?? 0;
   return (
-    <div className="mx-auto mt-3 flex max-w-xs items-center gap-2 text-xs font-medium text-slate-400">
-      <span>Baixo</span>
-      <div
-        className="h-1.5 flex-1 rounded-full"
-        style={{
-          background: "linear-gradient(to right, #f97316, #f59e0b, #eab308, #84cc16, #22c55e)",
-        }}
-      />
-      <span>Alto</span>
+    <div className="mx-auto mt-4 max-w-md">
+      <div className="h-6 w-full overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-6 rounded-full transition-all ${corPorPontuacao(p)}`}
+          style={{ width: `${p}%` }}
+        />
+      </div>
+      <div className="relative mt-1.5 h-4 text-[11px] font-medium text-slate-400 tabular-nums">
+        <span className="absolute left-0">0</span>
+        <span className="absolute left-1/4 -translate-x-1/2">25</span>
+        <span className="absolute left-1/2 -translate-x-1/2">50</span>
+        <span className="absolute left-3/4 -translate-x-1/2">75</span>
+        <span className="absolute right-0">100</span>
+      </div>
+      <div className="mt-1 flex justify-between text-xs font-semibold text-slate-500">
+        <span>Sem impacto</span>
+        <span>Alto impacto</span>
+      </div>
     </div>
   );
 }
@@ -57,7 +69,7 @@ export function ScoreIndex({ radar, impactoGeral }: ScoreIndexProps) {
         <p className="mt-1 text-7xl font-bold tabular-nums text-slate-800">
           {pontosGeral ?? "—"}
         </p>
-        <LegendaGradiente />
+        <BarraIndiceGeral pontos={pontosGeral} />
       </div>
 
       <h2 className="mb-3 mt-6 text-lg font-bold text-slate-800">Por dimensão</h2>

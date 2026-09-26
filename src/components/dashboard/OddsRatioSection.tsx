@@ -12,6 +12,10 @@ type Medida = { chave: "overall" | string; nome: string };
 
 type Desfecho = {
   nome: string; // ex: "boa saúde física"
+  // Frase natural pra interpretacao em texto - ex: "ter boa saúde física", "ser fisicamente
+  // ativo". Cada desfecho pede uma construcao verbal diferente, entao nao da pra derivar de
+  // "nome" automaticamente.
+  frase: string;
   getValor: (s: SessionScore) => 0 | 1 | null;
 };
 
@@ -42,26 +46,67 @@ function Pilula({ or, significativo }: { or: number; significativo: boolean }) {
   );
 }
 
-function Dumbbell({ linha }: { linha: LinhaResultado }) {
-  const esquerda = Math.min(linha.pctBaixo, linha.pctAlto);
-  const direita = Math.max(linha.pctBaixo, linha.pctAlto);
+// Duas barras (grupo Baixo x grupo Alto) com o percentual escrito do lado - troca o dumbbell
+// anterior (dois pontos numa linha) por algo que se le direto, sem precisar interpretar
+// posicao relativa num eixo sem numeros.
+function BarraComparativa({ linha }: { linha: LinhaResultado }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <span className="w-12 shrink-0 text-xs text-slate-500">Baixo</span>
+        <div className="h-4 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className={`h-4 rounded-full ${COR_BAIXO}`} style={{ width: `${linha.pctBaixo}%` }} />
+        </div>
+        <span className="w-11 shrink-0 text-right text-xs font-semibold tabular-nums text-slate-600">
+          {Math.round(linha.pctBaixo)}%
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="w-12 shrink-0 text-xs text-slate-500">Alto</span>
+        <div className="h-4 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className={`h-4 rounded-full ${COR_ALTO}`} style={{ width: `${linha.pctAlto}%` }} />
+        </div>
+        <span className="w-11 shrink-0 text-right text-xs font-semibold tabular-nums text-slate-600">
+          {Math.round(linha.pctAlto)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Frase pronta com a leitura do Impacto Geral - o numero de "vezes mais chances" (Pilula) ja
+// existe em cada linha, mas so faz sentido de cara pra quem ja entende odds ratio. Aqui vira
+// uma frase direta com o resultado especifico do Impacto Geral (1a linha de cada painel).
+function fraseInterpretacao(desfecho: Desfecho, linhaGeral: LinhaResultado | null | undefined): string {
+  if (!linhaGeral) return "Ainda não há dados suficientes pra essa comparação.";
+  if (!linhaGeral.significativo) {
+    return `Impacto Geral alto ou baixo não fez diferença clara em ${desfecho.frase} nas respostas até agora.`;
+  }
+  const positivo = linhaGeral.or >= 1;
+  const valor = positivo ? linhaGeral.or : 1 / linhaGeral.or;
+  const grupoForte = positivo ? "alto" : "baixo";
+  const grupoFraco = positivo ? "baixo" : "alto";
+  return `Quem tem Impacto Geral ${grupoForte} tem ${valor.toFixed(1)}x mais chances de ${desfecho.frase} do que quem tem Impacto Geral ${grupoFraco}.`;
+}
+
+function Interpretacao({
+  desfecho,
+  linhaGeral,
+}: {
+  desfecho: Desfecho;
+  linhaGeral: LinhaResultado | null | undefined;
+}) {
+  const tom =
+    !linhaGeral || !linhaGeral.significativo
+      ? "border-slate-200 bg-slate-50 text-slate-500"
+      : linhaGeral.or >= 1
+        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+        : "border-orange-200 bg-orange-50 text-orange-800";
 
   return (
-    <div className="relative h-5 w-full">
-      <div className="absolute inset-y-1/2 h-px w-full bg-slate-100" />
-      <div
-        className="absolute inset-y-1/2 h-0.5 -translate-y-1/2 bg-slate-300"
-        style={{ left: `${esquerda}%`, width: `${direita - esquerda}%` }}
-      />
-      <div
-        className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ${COR_BAIXO}`}
-        style={{ left: `${linha.pctBaixo}%` }}
-      />
-      <div
-        className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ${COR_ALTO} ring-2 ring-white`}
-        style={{ left: `${linha.pctAlto}%` }}
-      />
-    </div>
+    <p className={`mb-4 rounded-lg border px-3 py-2 text-sm font-medium ${tom}`}>
+      {fraseInterpretacao(desfecho, linhaGeral)}
+    </p>
   );
 }
 
@@ -120,6 +165,7 @@ function PainelDesfecho({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h3 className="mb-1 text-base font-bold text-slate-800">{desfecho.nome}</h3>
+      <Interpretacao desfecho={desfecho} linhaGeral={linhas[0]} />
       <div className="mb-4 flex items-center gap-4 text-sm text-slate-500">
         <span className="flex items-center gap-1.5">
           <span className={`h-2.5 w-2.5 rounded-full ${COR_BAIXO}`} />
@@ -138,7 +184,7 @@ function PainelDesfecho({
                 <span className="text-sm font-medium text-slate-700">{l.nome}</span>
                 <Pilula or={l.or} significativo={l.significativo} />
               </div>
-              <Dumbbell linha={l} />
+              <BarraComparativa linha={l} />
             </div>
           ) : (
             <div key={medidas[i].nome}>
@@ -166,14 +212,17 @@ export function OddsRatioSection({
   const desfechos: Desfecho[] = [
     {
       nome: "Boa saúde física",
+      frase: "ter boa saúde física",
       getValor: (s) => (s.saude_fisica === null ? null : s.saude_fisica <= 3 ? 0 : 1),
     },
     {
       nome: "Boa saúde mental",
+      frase: "ter boa saúde mental",
       getValor: (s) => (s.saude_mental === null ? null : s.saude_mental <= 3 ? 0 : 1),
     },
     {
       nome: "Fisicamente ativo",
+      frase: "ser fisicamente ativo",
       getValor: (s) => (s.ativo_fisicamente === null ? null : (s.ativo_fisicamente as 0 | 1)),
     },
   ];
