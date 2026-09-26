@@ -104,7 +104,12 @@ export function NuvemAoVivo({ pesquisa }: { pesquisa: Pesquisa }) {
   // "se formam" no ranking fixo, o resto continua na zona de chegada ate crescer o bastante
   // pra entrar. Sem isso fica dificil bater o olho e saber o que mais importa na nuvem.
   const ranking = palavras?.slice(0, TOP_N_RANKING) ?? [];
-  const chegando = palavras?.slice(TOP_N_RANKING) ?? [];
+  // A nuvem mostra TODAS as palavras, nao so as que ficaram de fora do ranking: o lexico
+  // positivo curado tem poucas dezenas de termos, entao e comum um evento inteiro nao passar de
+  // 5-8 palavras distintas - se a zona de chegada so mostrasse quem nao entrou no ranking, ela
+  // ficaria vazia a partir do momento em que todas as palavras existentes coubessem no top 8
+  // (foi exatamente o que aconteceu ao vivo). As mesmas palavras aparecem nas duas zonas.
+  const chegando = palavras ?? [];
 
   // Marca palavras cuja contagem acabou de subir (nova palavra ou mencionada de novo) pra
   // receberem o halo. Compara cada leitura com a anterior guardada num ref - so entra em
