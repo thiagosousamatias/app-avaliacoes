@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { baixarDadosBrutosCsv } from "@/lib/dashboard/exportCsv";
 
@@ -37,6 +38,13 @@ export function ExportButtons({ pesquisaId, pesquisaSlug }: ExportButtonsProps) 
       >
         Baixar relatório (PDF)
       </button>
+      <Link
+        href={`/dashboard/${pesquisaSlug}/relatorio`}
+        target="_blank"
+        className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+      >
+        Relatório simplificado
+      </Link>
     </div>
   );
 }

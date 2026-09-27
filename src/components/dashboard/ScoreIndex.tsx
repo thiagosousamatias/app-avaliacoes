@@ -5,6 +5,7 @@ import type { DashboardData } from "@/lib/types/survey";
 type ScoreIndexProps = {
   radar: DashboardData["radar"];
   impactoGeral: number | null;
+  titulo?: string;
 };
 
 function BarraPontuacao({ pontos }: { pontos: number | null }) {
@@ -59,13 +60,13 @@ function BarraIndiceGeral({ pontos }: { pontos: number | null }) {
   );
 }
 
-export function ScoreIndex({ radar, impactoGeral }: ScoreIndexProps) {
+export function ScoreIndex({ radar, impactoGeral, titulo = "Impacto Geral" }: ScoreIndexProps) {
   const pontosGeral = impactoGeral !== null ? Math.round(paraPercentual(impactoGeral)) : null;
 
   return (
     <div>
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm print:border-slate-300">
-        <p className="text-base font-semibold text-slate-500">Impacto Geral</p>
+        <p className="text-base font-semibold text-slate-500">{titulo}</p>
         <p className="mt-1 text-7xl font-bold tabular-nums text-slate-800">
           {pontosGeral ?? "—"}
         </p>

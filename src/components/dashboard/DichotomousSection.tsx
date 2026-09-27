@@ -15,6 +15,8 @@ type DichotomousSectionProps = {
   getValor: (s: SessionScore) => 0 | 1 | null;
   label0: string; // ex: "Ruim" / "Não"
   label1: string; // ex: "Boa" / "Sim"
+  mostrarComparacaoImpacto?: boolean; // false no relatório simplificado - o Impacto Geral já
+  // aparece como seção própria ali, repetir a comparação aqui vira ruído.
 };
 
 export function DichotomousSection({
@@ -23,6 +25,7 @@ export function DichotomousSection({
   getValor,
   label0,
   label1,
+  mostrarComparacaoImpacto = true,
 }: DichotomousSectionProps) {
   const { prevalencia, media1Pontos, media0Pontos, significativo } = useMemo(() => {
     const pares = sessoes
@@ -82,30 +85,32 @@ export function DichotomousSection({
         ))}
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-          Impacto Geral
-        </p>
-        <div className="space-y-1.5">
-          {[
-            { label: label1, pontos: media1Pontos, cor: COR_1 },
-            { label: label0, pontos: media0Pontos, cor: COR_0 },
-          ].map((g) => (
-            <div key={g.label} className="flex items-center gap-2">
-              <span className="w-14 shrink-0 text-sm text-slate-600">{g.label}</span>
-              <div className="h-2.5 flex-1 rounded-full bg-slate-100">
-                <div
-                  className={`h-2.5 rounded-full ${g.cor}`}
-                  style={{ width: `${((g.pontos ?? 0) / maxPontos) * 100}%` }}
-                />
+      {mostrarComparacaoImpacto && (
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+            Impacto Geral
+          </p>
+          <div className="space-y-1.5">
+            {[
+              { label: label1, pontos: media1Pontos, cor: COR_1 },
+              { label: label0, pontos: media0Pontos, cor: COR_0 },
+            ].map((g) => (
+              <div key={g.label} className="flex items-center gap-2">
+                <span className="w-14 shrink-0 text-sm text-slate-600">{g.label}</span>
+                <div className="h-2.5 flex-1 rounded-full bg-slate-100">
+                  <div
+                    className={`h-2.5 rounded-full ${g.cor}`}
+                    style={{ width: `${((g.pontos ?? 0) / maxPontos) * 100}%` }}
+                  />
+                </div>
+                <span className="w-8 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">
+                  {g.pontos ?? "—"}
+                </span>
               </div>
-              <span className="w-8 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">
-                {g.pontos ?? "—"}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
