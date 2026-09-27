@@ -81,34 +81,37 @@ export function RelatorioSimplificado({ pesquisa }: { pesquisa: Pesquisa }) {
         Imprimir / Baixar PDF
       </button>
 
+      {/* Logos ficam fora do gradiente: a logo dos jogos e bem colorida (azul/roxo/verde) e
+          quase sumia de contraste sobre um fundo de tons parecidos. Aqui, num fundo neutro,
+          todas ficam legiveis. */}
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Image
+          src="/jogos-sesi-saude-logo.png"
+          alt="Jogos do SESI + Saúde"
+          width={640}
+          height={640}
+          className="h-16 w-auto"
+          priority
+        />
+        <Image
+          src="/sesi-saude-logo.png"
+          alt="SESI + Saúde"
+          width={1067}
+          height={584}
+          className="h-9 w-auto"
+        />
+        <Image
+          src="/sesi-institucional-logo.png"
+          alt="SESI - Serviço Social da Indústria"
+          width={373}
+          height={106}
+          className="h-8 w-auto"
+        />
+      </div>
+
       {/* Capa: mesma paleta e tipografia em negrito italico do banner de divulgacao do evento. */}
       <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500 via-indigo-400 to-emerald-400 p-8 text-center text-white shadow-lg print:break-inside-avoid">
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Image
-            src="/jogos-sesi-saude-logo.png"
-            alt="Jogos do SESI + Saúde"
-            width={640}
-            height={640}
-            className="h-16 w-auto"
-            priority
-          />
-          <Image
-            src="/sesi-saude-logo.png"
-            alt="SESI + Saúde"
-            width={1067}
-            height={584}
-            className="h-9 w-auto"
-          />
-          <Image
-            src="/sesi-institucional-logo.png"
-            alt="SESI - Serviço Social da Indústria"
-            width={373}
-            height={106}
-            className="h-8 w-auto brightness-0 invert"
-          />
-        </div>
-
-        <h1 className="mt-5 text-3xl font-black tracking-tight uppercase italic sm:text-4xl">
+        <h1 className="text-3xl font-black tracking-tight uppercase italic sm:text-4xl">
           {pesquisa.titulo}
         </h1>
         <p className="mt-1 text-sm font-semibold italic text-white/80">
