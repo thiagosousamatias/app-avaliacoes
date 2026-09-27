@@ -55,7 +55,7 @@ export function DichotomousSection({
   const maxPontos = Math.max(1, media1Pontos ?? 0, media0Pontos ?? 0);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm print:break-inside-avoid">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-bold text-slate-800">{titulo}</h3>
         {significativo && (

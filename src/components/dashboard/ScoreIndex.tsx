@@ -23,7 +23,7 @@ function ScoreTile({ label, valor1a5 }: { label: string; valor1a5: number | null
   const pontos = valor1a5 !== null ? Math.round(paraPercentual(valor1a5)) : null;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm print:break-inside-avoid">
       <p className="min-h-9 text-sm font-medium leading-tight text-slate-600">{label}</p>
       <p className="mt-1 text-3xl font-bold tabular-nums text-slate-800">{pontos ?? "—"}</p>
       <div className="mt-2">
@@ -65,7 +65,7 @@ export function ScoreIndex({ radar, impactoGeral, titulo = "Impacto Geral" }: Sc
 
   return (
     <div>
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm print:border-slate-300">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm print:break-inside-avoid print:border-slate-300">
         <p className="text-base font-semibold text-slate-500">{titulo}</p>
         <p className="mt-1 text-7xl font-bold tabular-nums text-slate-800">
           {pontosGeral ?? "—"}

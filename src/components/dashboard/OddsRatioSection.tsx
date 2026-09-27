@@ -163,7 +163,7 @@ function PainelDesfecho({
   }, [desfecho, medidas, sessoes]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm print:break-inside-avoid">
       <h3 className="mb-1 text-base font-bold text-slate-800">{desfecho.nome}</h3>
       <Interpretacao desfecho={desfecho} linhaGeral={linhas[0]} />
       <div className="mb-4 flex items-center gap-4 text-sm text-slate-500">

@@ -52,7 +52,7 @@ export function WordCloudSection({
           Nenhuma palavra da lista positiva apareceu nas mensagens ainda.
         </p>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print:break-inside-avoid">
           <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2">
             {palavras.map((p) => (
               <span

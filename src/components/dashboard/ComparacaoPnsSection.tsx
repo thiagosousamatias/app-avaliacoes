@@ -29,7 +29,7 @@ function BarraDupla({ nome, pct, cor }: { nome: string; pct: number | null; cor:
 
 function CardIndicador({ indicador }: { indicador: Indicador }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm print:break-inside-avoid">
       <h4 className="mb-4 text-base font-bold text-slate-800">{indicador.nome}</h4>
       <div className="space-y-4">
         <BarraDupla nome="Nosso grupo" pct={indicador.pctNosso} cor={COR_NOSSO} />

@@ -13,7 +13,7 @@ import { NuvemRelatorio } from "./NuvemRelatorio";
 function DimensaoTile({ label, valor1a5 }: { label: string; valor1a5: number | null }) {
   const pontos = valor1a5 !== null ? Math.round(paraPercentual(valor1a5)) : null;
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm print:break-inside-avoid">
       <p className="min-h-10 text-sm font-semibold leading-tight text-slate-600">{label}</p>
       <p className="mt-1 text-4xl font-black tabular-nums text-slate-800">{pontos ?? "—"}</p>
       <div className="mt-2 h-2.5 rounded-full bg-slate-100">
@@ -44,7 +44,7 @@ function CardIndicadorSaude({
   const pctPositivo = total ? (pares.filter((v) => v === 1).length / total) * 100 : null;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm print:break-inside-avoid">
       <h4 className="mb-3 text-base font-bold text-slate-800">{titulo}</h4>
       <p className="text-5xl font-black tabular-nums text-emerald-600">
         {pctPositivo !== null ? `${Math.round(pctPositivo)}%` : "—"}
@@ -122,15 +122,17 @@ export function RelatorioSimplificado({ pesquisa }: { pesquisa: Pesquisa }) {
           </p>
         )}
 
-        <p className="mt-8 text-sm font-bold tracking-[0.2em] text-white/70 uppercase">
+        <p className="mt-8 text-sm font-extrabold tracking-[0.2em] text-white uppercase [text-shadow:_0_1px_6px_rgb(0_0_0_/_25%)]">
           Impacto dos jogos na vida e no trabalho
         </p>
-        <p className="mt-1 text-8xl font-black tabular-nums italic">{pontosGeral ?? "—"}</p>
+        <p className="mt-1 text-8xl font-black tabular-nums italic [text-shadow:_0_2px_14px_rgb(0_0_0_/_25%)]">
+          {pontosGeral ?? "—"}
+        </p>
         <div className="mx-auto mt-5 max-w-md">
-          <div className="h-7 w-full overflow-hidden rounded-full bg-white/20">
+          <div className="h-7 w-full overflow-hidden rounded-full bg-black/20 ring-1 ring-white/40">
             <div className="h-7 rounded-full bg-white" style={{ width: `${pontosGeral ?? 0}%` }} />
           </div>
-          <div className="mt-2 flex justify-between text-xs font-bold tracking-wide text-white/70 uppercase">
+          <div className="mt-2 flex justify-between text-xs font-extrabold tracking-wide text-white uppercase">
             <span>Sem impacto</span>
             <span>Alto impacto</span>
           </div>
