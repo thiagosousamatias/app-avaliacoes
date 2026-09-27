@@ -2,7 +2,7 @@ import { PNS_2019 } from "@/lib/dashboard/pnsReferencia";
 import type { SessionScore } from "@/lib/types/survey";
 
 const COR_NOSSO = "bg-emerald-500";
-const COR_PNS = "bg-slate-400";
+const COR_PNS = "bg-violet-400";
 
 type Indicador = {
   nome: string;
@@ -11,34 +11,33 @@ type Indicador = {
   rodape: string;
 };
 
-function BarraDupla({ indicador }: { indicador: Indicador }) {
+function BarraDupla({ nome, pct, cor }: { nome: string; pct: number | null; cor: string }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-slate-700">{indicador.nome}</p>
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="w-28 shrink-0 text-xs text-slate-500">Nosso grupo</span>
-          <div className="h-5 flex-1 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className={`h-5 rounded-full ${COR_NOSSO}`}
-              style={{ width: `${indicador.pctNosso ?? 0}%` }}
-            />
-          </div>
-          <span className="w-12 shrink-0 text-right text-sm font-bold tabular-nums text-slate-800">
-            {indicador.pctNosso !== null ? `${Math.round(indicador.pctNosso)}%` : "—"}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-28 shrink-0 text-xs text-slate-500">PNS 2019 (Brasil)</span>
-          <div className="h-5 flex-1 overflow-hidden rounded-full bg-slate-100">
-            <div className={`h-5 rounded-full ${COR_PNS}`} style={{ width: `${indicador.pctPns}%` }} />
-          </div>
-          <span className="w-12 shrink-0 text-right text-sm font-bold tabular-nums text-slate-600">
-            {indicador.pctPns}%
-          </span>
-        </div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <span className="text-sm font-semibold text-slate-600">{nome}</span>
+        <span className="text-2xl font-black tabular-nums text-slate-800">
+          {pct !== null ? `${Math.round(pct)}%` : "—"}
+        </span>
       </div>
-      <p className="mt-1.5 text-xs text-slate-400">{indicador.rodape}</p>
+      <div className="h-7 overflow-hidden rounded-full bg-slate-100">
+        <div className={`h-7 rounded-full ${cor}`} style={{ width: `${pct ?? 0}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CardIndicador({ indicador }: { indicador: Indicador }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h4 className="mb-4 text-base font-bold text-slate-800">{indicador.nome}</h4>
+      <div className="space-y-4">
+        <BarraDupla nome="Nosso grupo" pct={indicador.pctNosso} cor={COR_NOSSO} />
+        <BarraDupla nome="PNS 2019 (Brasil)" pct={indicador.pctPns} cor={COR_PNS} />
+      </div>
+      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
+        {indicador.rodape}
+      </p>
     </div>
   );
 }
@@ -70,16 +69,16 @@ export function ComparacaoPnsSection({ sessoes }: { sessoes: SessionScore[] }) {
   ];
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 text-base font-bold text-slate-800">
+    <div>
+      <h2 className="mb-3 text-lg font-bold text-slate-800">
         Comparação com a Pesquisa Nacional de Saúde
-      </h3>
-      <div className="space-y-5">
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2">
         {indicadores.map((i) => (
-          <BarraDupla key={i.nome} indicador={i} />
+          <CardIndicador key={i.nome} indicador={i} />
         ))}
       </div>
-      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-slate-400">
         Fonte: {PNS_2019.fonte}. Saúde mental não entra aqui porque a PNS mede diagnóstico de
         depressão, não autoavaliação da saúde mental - são medidas diferentes.
       </p>
