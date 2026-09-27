@@ -82,7 +82,7 @@ export function RelatorioSimplificado({ pesquisa }: { pesquisa: Pesquisa }) {
       </button>
 
       {/* Capa: mesma paleta e tipografia em negrito italico do banner de divulgacao do evento. */}
-      <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-violet-700 via-indigo-600 to-emerald-500 p-8 text-center text-white shadow-lg print:break-inside-avoid">
+      <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500 via-indigo-400 to-emerald-400 p-8 text-center text-white shadow-lg print:break-inside-avoid">
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Image
             src="/jogos-sesi-saude-logo.png"

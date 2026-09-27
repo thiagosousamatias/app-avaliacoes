@@ -33,7 +33,7 @@ function CardIndicador({ indicador }: { indicador: Indicador }) {
       <h4 className="mb-4 text-base font-bold text-slate-800">{indicador.nome}</h4>
       <div className="space-y-4">
         <BarraDupla nome="Nosso grupo" pct={indicador.pctNosso} cor={COR_NOSSO} />
-        <BarraDupla nome="PNS 2019 (Brasil)" pct={indicador.pctPns} cor={COR_PNS} />
+        <BarraDupla nome="Pesquisa Nacional de Saúde (Brasil)" pct={indicador.pctPns} cor={COR_PNS} />
       </div>
       <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
         {indicador.rodape}
@@ -64,7 +64,7 @@ export function ComparacaoPnsSection({ sessoes }: { sessoes: SessionScore[] }) {
       nome: "Fisicamente ativo",
       pctNosso: pctAtivo,
       pctPns: PNS_2019.fisicamenteAtivoLazer.percentual,
-      rodape: `PNS: ${PNS_2019.fisicamenteAtivoLazer.descricao} - critério mais rigoroso que o nosso (150min/semana de atividade), números não são estritamente equivalentes.`,
+      rodape: `PNS: ${PNS_2019.fisicamenteAtivoLazer.descricao}.`,
     },
   ];
 

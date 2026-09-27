@@ -8,7 +8,9 @@
 // autoavaliacao da saude mental como a nossa pergunta: sao construtos diferentes, comparar um
 // com o outro seria enganoso.
 export const PNS_2019 = {
-  fonte: "IBGE, Pesquisa Nacional de Saúde (PNS) 2019",
+  // O ano fica de fora do texto exibido (pedido explicito), mas os numeros continuam sendo os
+  // da edicao 2019 - unica com esses indicadores publicados ate agora.
+  fonte: "IBGE, Pesquisa Nacional de Saúde (PNS)",
   saudeBoaOuMuitoBoa: {
     percentual: 66.1,
     // Pergunta da PNS: autoavaliacao geral de saude (muito boa/boa/regular/ruim/muito ruim),
